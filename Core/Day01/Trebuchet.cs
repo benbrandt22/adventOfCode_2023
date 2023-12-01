@@ -1,0 +1,86 @@
+﻿using Core.Shared;
+using Core.Shared.Extensions;
+using Core.Shared.Modules;
+
+namespace Core.Day01;
+
+public class Trebuchet : BaseDayModule
+{
+    public override int Day => 1;
+    
+    public override void Execute()
+    {
+        ProcessPart1("Day01/day1-sample.txt");
+        WriteHorizontalRule();
+        ProcessPart1("Day01/day1-input.txt");
+        WriteHorizontalRule();
+        ProcessPart2("Day01/day1-samplePart2.txt");
+        WriteHorizontalRule();
+        ProcessPart2("Day01/day1-input.txt");
+    }
+
+    private void ProcessPart1(string filename)
+    {
+        var lines = TextFileLoader.LoadLines(filename).ToList();
+        WriteLine($"Loaded {filename} with {lines.Count} lines.");
+
+        var totalDigitsOnlyCalibrationValue = lines
+            .Select(line => DigitsOnlyCalibrationValue(line))
+            .Sum();
+
+        WriteLine($"Part 1 - Total Digits-Only calibration value: {totalDigitsOnlyCalibrationValue}");
+    }
+
+    private int DigitsOnlyCalibrationValue(string line)
+    {
+        var digits = line.Where(char.IsDigit).ToList();
+        var value = int.Parse($"{digits.First()}{digits.Last()}");
+        return value;
+    }
+    
+    private void ProcessPart2(string filename)
+    {
+        var lines = TextFileLoader.LoadLines(filename).ToList();
+        WriteLine($"Loaded {filename} with {lines.Count} lines.");
+
+        var totalCalibrationValue = lines
+            .Select(line => DigitsOrWordsCalibrationValue(line))
+            .Sum();
+
+        WriteLine($"Part 2 - Total Digits/Words calibration value: {totalCalibrationValue}");
+    }
+    
+    private int DigitsOrWordsCalibrationValue(string line)
+    {
+        Debug(line);
+        
+        var substringsToFind = new[] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+        
+        var foundItems = line.FindSubstrings(substringsToFind, StringComparison.OrdinalIgnoreCase);
+        foundItems.ForEach(x => Debug($" ({x.Index} : {x.Value})"));
+        
+        var digits = foundItems
+            .Select(x => x.Value.Length == 1 ? int.Parse(x.Value) : DigitWordToInt(x.Value))
+            .ToList();
+        
+        var value = int.Parse($"{digits.First()}{digits.Last()}");
+        
+        return value;
+    }
+    
+    private int DigitWordToInt(string digitWord) =>
+        digitWord.ToLower() switch
+        {
+            "zero" => 0,
+            "one" => 1,
+            "two" => 2,
+            "three" => 3,
+            "four" => 4,
+            "five" => 5,
+            "six" => 6,
+            "seven" => 7,
+            "eight" => 8,
+            "nine" => 9,
+            _ => throw new ArgumentOutOfRangeException(nameof(digitWord), digitWord, null)
+        };
+}
