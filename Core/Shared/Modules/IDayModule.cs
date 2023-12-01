@@ -3,5 +3,5 @@
 public interface IDayModule
 {
     public int Day { get; }
-    public void Execute();
+    public string Title { get; }
 }

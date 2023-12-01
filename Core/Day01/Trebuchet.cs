@@ -1,25 +1,25 @@
 ﻿using Core.Shared;
 using Core.Shared.Extensions;
 using Core.Shared.Modules;
+using FluentAssertions;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace Core.Day01;
 
 public class Trebuchet : BaseDayModule
 {
-    public override int Day => 1;
+    public Trebuchet(ITestOutputHelper outputHelper) : base(outputHelper) { }
     
-    public override void Execute()
-    {
-        ProcessPart1("Day01/day1-sample.txt");
-        WriteHorizontalRule();
-        ProcessPart1("Day01/day1-input.txt");
-        WriteHorizontalRule();
-        ProcessPart2("Day01/day1-samplePart2.txt");
-        WriteHorizontalRule();
-        ProcessPart2("Day01/day1-input.txt");
-    }
+    public override int Day => 1;
+    public override string Title => "Trebuchet?!";
 
-    private void ProcessPart1(string filename)
+    [Fact] public void Part1Sample() => ProcessPart1("Day01/day1-sample.txt").Should().Be(142);
+    [Fact] public void Part1Input() => ProcessPart1("Day01/day1-input.txt");
+    [Fact] public void Part2Sample() => ProcessPart2("Day01/day1-samplePart2.txt").Should().Be(281);
+    [Fact] public void Part2Input() => ProcessPart2("Day01/day1-input.txt");
+
+    public int ProcessPart1(string filename)
     {
         var lines = TextFileLoader.LoadLines(filename).ToList();
         WriteLine($"Loaded {filename} with {lines.Count} lines.");
@@ -29,8 +29,10 @@ public class Trebuchet : BaseDayModule
             .Sum();
 
         WriteLine($"Part 1 - Total Digits-Only calibration value: {totalDigitsOnlyCalibrationValue}");
+        
+        return totalDigitsOnlyCalibrationValue;
     }
-
+    
     private int DigitsOnlyCalibrationValue(string line)
     {
         var digits = line.Where(char.IsDigit).ToList();
@@ -38,7 +40,7 @@ public class Trebuchet : BaseDayModule
         return value;
     }
     
-    private void ProcessPart2(string filename)
+    public int ProcessPart2(string filename)
     {
         var lines = TextFileLoader.LoadLines(filename).ToList();
         WriteLine($"Loaded {filename} with {lines.Count} lines.");
@@ -48,13 +50,19 @@ public class Trebuchet : BaseDayModule
             .Sum();
 
         WriteLine($"Part 2 - Total Digits/Words calibration value: {totalCalibrationValue}");
+
+        return totalCalibrationValue;
     }
     
     private int DigitsOrWordsCalibrationValue(string line)
     {
         Debug(line);
-        
-        var substringsToFind = new[] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+
+        var substringsToFind = new[]
+        {
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+            "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"
+        };
         
         var foundItems = line.FindSubstrings(substringsToFind, StringComparison.OrdinalIgnoreCase);
         foundItems.ForEach(x => Debug($" ({x.Index} : {x.Value})"));
