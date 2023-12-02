@@ -26,9 +26,9 @@ public class CubeConundrum : BaseDayModule
 
         var theoreticalBag = new CubeGameBag(new List<CubeColorQuantity>()
         {
-            new(12, "red"),
-            new(13, "green"),
-            new(14, "blue")
+            new(12, CubeColor.Red),
+            new(13, CubeColor.Green),
+            new(14, CubeColor.Blue)
         });
         
         var possibleGames = games.Where(game =>
@@ -62,8 +62,7 @@ public class CubeConundrum : BaseDayModule
     private CubeGameBag CalculateMinimumViableBag(CubeGame game)
     {
         var allQuantities = game.Rounds.SelectMany(r => r.CubeColorQuantities).ToList();
-        var allColors = allQuantities.Select(q => q.Color).Distinct().ToList();
-        var minimumNecessary = allColors
+        var minimumNecessary = new[]{ CubeColor.Red, CubeColor.Green, CubeColor.Blue }
             .Select(color =>
             {
                 var biggestColorGrab = allQuantities.Where(q => q.Color == color).Max(q => q.Quantity);
@@ -85,11 +84,13 @@ public class CubeConundrum : BaseDayModule
         public List<CubeColorQuantity> CubeColorQuantities => cubeColorQuantities;
     }
     
-    private class CubeColorQuantity(int quantity, string color)
+    private class CubeColorQuantity(int quantity, CubeColor color)
     {
         public int Quantity => quantity;
-        public string Color => color;
+        public CubeColor Color => color;
     }
+
+    private enum CubeColor { Red, Green, Blue }
 
     private class CubeGameBag(List<CubeColorQuantity> cubeColorQuantities)
     {
@@ -106,9 +107,9 @@ public class CubeConundrum : BaseDayModule
 
         public int CalculatePower()
         {
-            var redValue = cubeColorQuantities.Where(x => x.Color == "red").Sum(x => x.Quantity);
-            var greenValue = cubeColorQuantities.Where(x => x.Color == "green").Sum(x => x.Quantity);
-            var blueValue = cubeColorQuantities.Where(x => x.Color == "blue").Sum(x => x.Quantity);
+            var redValue = cubeColorQuantities.Where(x => x.Color == CubeColor.Red).Sum(x => x.Quantity);
+            var greenValue = cubeColorQuantities.Where(x => x.Color == CubeColor.Green).Sum(x => x.Quantity);
+            var blueValue = cubeColorQuantities.Where(x => x.Color == CubeColor.Blue).Sum(x => x.Quantity);
             var power = redValue * greenValue * blueValue;
             return power;
         }

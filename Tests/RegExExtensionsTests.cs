@@ -3,12 +3,16 @@ using Core.Shared.Extensions;
 
 namespace Tests;
 
-public class RegExExtensionsTests
+public class RegExExtensionsTests(ITestOutputHelper outputHelper)
 {
     [Theory]
     [ClassData(typeof(MapToTestData))]
     public void MapTo_MapsMatchToObject_AsExpected(string input, Regex pattern, Type expectedType, object expectedResult)
     {
+        outputHelper.WriteLine($"Input: {input}");
+        outputHelper.WriteLine($"Pattern: {pattern}");
+        outputHelper.WriteLine($"Expected type: {expectedType}");
+        
         var match = pattern.Matches(input).First();
         
         var mapToMethodInfo = typeof(RegExExtensions).GetMethod(nameof(RegExExtensions.MapTo), new[] { typeof(Match) });
@@ -36,6 +40,8 @@ public class MapToTestData : TheoryData<string, Regex, Type, object>
         public List<int> Integers { get; set; } = new();
     }
     
+    public record EnumAndIntClass(DayOfWeek DayOfWeek, int DayOfMonth) { }
+    
     public MapToTestData()
     {
         Add(" MyText 123 1.23 ",
@@ -53,5 +59,11 @@ public class MapToTestData : TheoryData<string, Regex, Type, object>
             new Regex(@"Name:\s+(?<string>\w+)"),
             typeof(StringAndListClass),
             new StringAndListClass() { String = "John", Integers = new() });
+        
+        // verify we can map a string regex match to an Enum
+        Add("DOW: saturday, DOM: 2",
+            new Regex(@"DOW:\s+(?<dayOfWeek>\w+),\s+DOM:\s+(?<dayOfMonth>\d+)"),
+            typeof(EnumAndIntClass),
+            new EnumAndIntClass(DayOfWeek.Saturday, 2));
     }
 }
