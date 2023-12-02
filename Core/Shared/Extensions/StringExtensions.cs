@@ -11,7 +11,7 @@ public static class StringExtensions
             throw new ArgumentException("the string to find may not be empty", nameof(value));
         }
 
-        for (int index = 0;; index += value.Length) {
+        for (int index = 0;; index += 1) {
             index = source.IndexOf(value, index, comparisonType);
             if (index == -1)
             {
