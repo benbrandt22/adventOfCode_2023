@@ -1,6 +1,4 @@
-﻿using Xunit.Abstractions;
-
-namespace Core.Shared.Modules;
+﻿namespace Core.Shared.Modules;
 
 public abstract class BaseDayModule : IDayModule
 {

@@ -1,9 +1,6 @@
 ﻿using Core.Shared;
 using Core.Shared.Extensions;
 using Core.Shared.Modules;
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Core.Day01;
 
