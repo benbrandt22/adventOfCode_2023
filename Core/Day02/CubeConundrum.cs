@@ -1,0 +1,139 @@
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+using Core.Shared;
+using Core.Shared.Extensions;
+using Core.Shared.Modules;
+
+namespace Core.Day02;
+
+public class CubeConundrum : BaseDayModule
+{
+    public CubeConundrum(ITestOutputHelper outputHelper) : base(outputHelper) { }
+    
+    public override int Day => 2;
+    public override string Title => "Cube Conundrum";
+
+    [Fact] public void Part1_Sample() => Part1_TotalOfPossibleGameIds("Day02/sample.txt").Should().Be(8);
+    [Fact] public void Part1() => Part1_TotalOfPossibleGameIds("Day02/input.txt");
+    
+    [Fact] public void Part2_Sample() => Part2_TotalOfMinimumBagPowers("Day02/sample.txt").Should().Be(2286);
+    [Fact] public void Part2() => Part2_TotalOfMinimumBagPowers("Day02/input.txt");
+    
+    public int Part1_TotalOfPossibleGameIds(string filename)
+    {
+        var games = TextFileLoader.LoadLines(filename).Select(ParseGame).ToList();
+        WriteLine($"Loaded {filename} with {games.Count} games.");
+
+        var theoreticalBag = new CubeGameBag(new List<CubeColorQuantity>()
+        {
+            new(12, "red"),
+            new(13, "green"),
+            new(14, "blue")
+        });
+        
+        var possibleGames = games.Where(game =>
+        {
+            var possible = game.Rounds.All(round => theoreticalBag.CouldContain(round.CubeColorQuantities));
+            return possible;
+        }).ToList();
+
+        WriteLine($"{possibleGames.Count} possible games.");
+        var sumOfGameIds = possibleGames.Sum(g => g.GameId);
+        WriteLine($"Sum of game ids: {sumOfGameIds}");
+        
+        return sumOfGameIds;
+    }
+    
+    public int Part2_TotalOfMinimumBagPowers(string filename)
+    {
+        var games = TextFileLoader.LoadLines(filename).Select(ParseGame).ToList();
+        WriteLine($"Loaded {filename} with {games.Count} games.");
+
+        var totalMinimumBagPowers = games
+            .Select(CalculateMinimumViableBag)
+            .Select(bag => bag.CalculatePower())
+            .Sum();
+
+        WriteLine($"Total minimum bag powers: {totalMinimumBagPowers}");
+        
+        return totalMinimumBagPowers;
+    }
+
+    private CubeGameBag CalculateMinimumViableBag(CubeGame game)
+    {
+        var allQuantities = game.Rounds.SelectMany(r => r.CubeColorQuantities).ToList();
+        var allColors = allQuantities.Select(q => q.Color).Distinct().ToList();
+        var minimumNecessary = allColors
+            .Select(color =>
+            {
+                var biggestColorGrab = allQuantities.Where(q => q.Color == color).Max(q => q.Quantity);
+                return new CubeColorQuantity(biggestColorGrab, color);
+            }).ToList();
+        return new CubeGameBag(minimumNecessary);
+    }
+
+
+    [DebuggerDisplay("Game {GameId}, {Rounds.Count} rounds")]
+    private class CubeGame
+    {
+        public int GameId { get; set; }
+        public List<CubeGameRound> Rounds { get; set; } = new();
+    }
+
+    private class CubeGameRound(List<CubeColorQuantity> cubeColorQuantities)
+    {
+        public List<CubeColorQuantity> CubeColorQuantities => cubeColorQuantities;
+    }
+    
+    private class CubeColorQuantity(int quantity, string color)
+    {
+        public int Quantity => quantity;
+        public string Color => color;
+    }
+
+    private class CubeGameBag(List<CubeColorQuantity> cubeColorQuantities)
+    {
+        public bool CouldContain(List<CubeColorQuantity> otherCubeColorQuantities)
+        {
+            bool possible = true;
+            foreach (var other in otherCubeColorQuantities)
+            {
+                possible = possible && cubeColorQuantities.Any(x => x.Color == other.Color && x.Quantity >= other.Quantity);
+            }
+
+            return possible;
+        }
+
+        public int CalculatePower()
+        {
+            var redValue = cubeColorQuantities.Where(x => x.Color == "red").Sum(x => x.Quantity);
+            var greenValue = cubeColorQuantities.Where(x => x.Color == "green").Sum(x => x.Quantity);
+            var blueValue = cubeColorQuantities.Where(x => x.Color == "blue").Sum(x => x.Quantity);
+            var power = redValue * greenValue * blueValue;
+            return power;
+        }
+    }
+
+    /// <summary>
+    /// Takes the input text and parses it into a CubeGame object.
+    /// </summary>
+    private CubeGame ParseGame(string line)
+    {
+        var gameIdRegEx = new Regex(@"^Game (?<gameId>\d+):", RegexOptions.None);
+        var roundCubeQtyRegEx = new Regex(@"(?<quantity>\d+) (?<color>[a-zA-Z]+)", RegexOptions.None);
+        
+        var game = gameIdRegEx.Match(line).MapTo<CubeGame>();
+
+        var rounds = line.Split(":").Last().Split(";");
+        
+        foreach (var roundText in rounds)
+        {
+            var cubeColorQuantities = roundCubeQtyRegEx.Matches(roundText).MapEachTo<CubeColorQuantity>();
+            var round = new CubeGameRound(cubeColorQuantities.ToList());
+            game.Rounds.Add(round);
+        }
+        
+        return game;
+    }
+}
+
