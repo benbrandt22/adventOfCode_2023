@@ -21,40 +21,26 @@ public class GearRatios : BaseDayModule
     
     public int Part1_PartNumbersTotal(string filename)
     {
-        // TODO: try refactoring to use new EngineSubstring Adjacent logic I developed for Part 2
         var lines = TextFileLoader.LoadLines(filename).ToList();
         WriteLine($"Loaded Engine {filename} with {lines.Count} lines.");
 
-        var allPotentialPartNumbers = new List<PotentialPartNumber>();
+        var allSymbols = new List<EngineSubstring>();
+        var allNumbers = new List<EngineSubstring>();
         for (int rowIndex = 0; rowIndex < lines.Count; rowIndex++)
         {
             var line = lines[rowIndex];
-            var potentialNumbersInLine = Regex.Matches(line, @"\d+")
-                .Select(m => new PotentialPartNumber(int.Parse(m.Value), rowIndex, m.Index));
-            allPotentialPartNumbers.AddRange(potentialNumbersInLine);
+            allNumbers.AddRange(Regex.Matches(line, @"\d+").Select(m => new EngineSubstring(rowIndex, m)));
+            allSymbols.AddRange(Regex.Matches(line, @"[^0123456789.]").Select(m => new EngineSubstring(rowIndex, m)));
         }
-        WriteLine($"Found {allPotentialPartNumbers.Count} potential part numbers");
+        WriteLine($"Located {allNumbers.Count} numbers and {allSymbols.Count} symbols");
         
-        var engineBounds = new CoordRect(0, lines.Count - 1, 0, lines[0].Length - 1);
-
-        var partNumbers = allPotentialPartNumbers
-            .Where(ppn =>
-            {
-                var surroundingRect = new CoordRect(ppn.Row - 1, ppn.Row + 1, ppn.Column - 1, ppn.Column + ppn.Value.ToString().Length)
-                    .BindWithin(engineBounds);
-                var surroundingSymbols = surroundingRect.ToCoordinates()
-                    .Select(c => lines[c.Row][c.Column])
-                    .Where(c => !char.IsDigit(c) && c != '.')
-                    .ToList();
-                Debug($" {ppn.Value} (Row {ppn.Row}, Column {ppn.Column}) - Surrounding Symbols: {new string(surroundingSymbols.ToArray())}");
-                // if any surrounding symbols, then its a part number
-                return surroundingSymbols.Any();
-            })
+        var partNumbers = allNumbers
+            .Where(number => allSymbols.Any(symbol => symbol.IsAdjacentTo(number)))
             .ToList();
         
         WriteLine($"Found {partNumbers.Count} part numbers (with adjacent symbols)");
-        
-        var partNumbersTotal = partNumbers.Sum(ppn => ppn.Value);
+
+        var partNumbersTotal = partNumbers.Sum(ppn => int.Parse(ppn.Value));
         WriteLine($"Part Numbers Total: {partNumbersTotal}");
         return partNumbersTotal;
     }
@@ -99,9 +85,6 @@ public class GearRatios : BaseDayModule
         return totalGearRatio;
     }
 
-    private record PotentialPartNumber(int Value, int Row, int Column);
-    private record Coordinate(int Row, int Column);
-
     private record EngineSubstring(string Value, int Row, int[] Columns)
     {
         public EngineSubstring(int row, Match match) : this(match.Value, row, Enumerable.Range(match.Index, match.Value.Length).ToArray() ) { }
@@ -116,30 +99,5 @@ public class GearRatios : BaseDayModule
     }
 
     private record GearAndNumbers(EngineSubstring Gear, List<EngineSubstring> Numbers);
-
-    private record CoordRect(int RowMin, int RowMax, int ColumnMin, int ColumnMax)
-    {
-        public CoordRect BindWithin(CoordRect outerBounds)
-        {
-            var rowMin = Math.Max(outerBounds.RowMin, RowMin);
-            var rowMax = Math.Min(outerBounds.RowMax, RowMax);
-            var columnMin = Math.Max(outerBounds.ColumnMin, ColumnMin);
-            var columnMax = Math.Min(outerBounds.ColumnMax, ColumnMax);
-            return new CoordRect(rowMin, rowMax, columnMin, columnMax);
-        }
-        
-        public List<Coordinate> ToCoordinates()
-        {
-            var coordinates = new List<Coordinate>();
-            for (int row = RowMin; row <= RowMax; row++)
-            {
-                for (int column = ColumnMin; column <= ColumnMax; column++)
-                {
-                    coordinates.Add(new Coordinate(row, column));
-                }
-            }
-            return coordinates;
-        }
-    }
 }
 
