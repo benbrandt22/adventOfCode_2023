@@ -38,4 +38,19 @@ public class StringExtensionsTests(ITestOutputHelper outputHelper)
             Add("abcabc", new[] { "ab", "abc" }, new[] { ("ab", 0), ("abc", 0), ("ab", 3), ("abc", 3) });
         }
     }
+    
+    [Theory]
+    [InlineData(new[] { "a", "b", "c" }, ", ", "a, b, c")]
+    [InlineData(new[] { "a", "b", "c" }, " ", "a b c")]
+    [InlineData(new[] { "a", "b", "c" }, "", "abc")]
+    [InlineData(new[] { "a", "b", "c" }, "123", "a123b123c")]
+    [InlineData(new[] { "apple", "orange", "banana" }, "|", "apple|orange|banana")]
+    [InlineData(new string[]{}, ",", "")]
+    public void JoinWith_Returns_Expected_Results(string[] values, string separator, string expected)
+    {
+        outputHelper.WriteLine($"values: {string.Join(", ", values)} separator: {separator}");
+        var result = values.JoinWith(separator);
+        result.Should().Be(expected);
+    }
+    
 }
