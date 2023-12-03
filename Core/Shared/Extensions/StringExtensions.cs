@@ -3,6 +3,12 @@
 public static class StringExtensions
 {
     /// <summary>
+    /// Joins the collection of strings together with the specified separator.
+    /// Acts as a shortcut to string.Join() to allow inline use with a collection of strings.
+    /// </summary>
+    public static string JoinWith(this IEnumerable<string> values, string separator) => string.Join(separator, values);
+    
+    /// <summary>
     /// Finds all substrings in a string, returning the index of each match.
     /// </summary>
     public static IEnumerable<int> AllIndexesOf(this string source, string value, StringComparison comparisonType) {
