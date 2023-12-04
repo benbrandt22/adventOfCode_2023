@@ -121,7 +121,7 @@ public class CubeConundrum : BaseDayModule
     private CubeGame ParseGame(string line)
     {
         var gameIdRegEx = new Regex(@"^Game (?<gameId>\d+):", RegexOptions.None);
-        var roundCubeQtyRegEx = new Regex(@"(?<quantity>\d+) (?<color>[a-zA-Z]+)", RegexOptions.None);
+        var roundCubeQtyRegEx = new Regex(@"(?<quantity>\d+) (?<color>red|green|blue)", RegexOptions.None);
         
         var game = gameIdRegEx.Match(line).MapTo<CubeGame>();
 
