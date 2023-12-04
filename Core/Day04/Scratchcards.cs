@@ -85,8 +85,8 @@ public class Scratchcards : BaseDayModule
         /// </summary>
         public int PointValue()
         {
-            var matchingNumbers = MatchingNumbers();
-            var points = matchingNumbers.Count == 0 ? 0 : (int)Math.Pow(2, (matchingNumbers.Count - 1));
+            var totalMatchingNumbers = MatchingNumbers().Count;
+            var points = totalMatchingNumbers == 0 ? 0 : (int)Math.Pow(2, (totalMatchingNumbers - 1));
             return points;
         }
     }
