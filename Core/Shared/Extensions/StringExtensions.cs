@@ -9,6 +9,22 @@ public static class StringExtensions
     public static string JoinWith(this IEnumerable<string> values, string separator) => string.Join(separator, values);
     
     /// <summary>
+    /// Splits a string into paragraphs using two carriage returns as the delimiter.
+    /// </summary>
+    public static IList<string> ToParagraphs(this string input, string delimiter = "\r\n\r\n")
+    {
+        return input.Split(new string[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    /// <summary>
+    /// Split a string into lines using a carriage return as the delimiter.
+    /// </summary>
+    public static IList<string> ToLines(this string input, string delimiter = "\r\n")
+    {
+        return input.Split(new string[] { delimiter }, StringSplitOptions.None);
+    }
+    
+    /// <summary>
     /// Finds all substrings in a string, returning the index of each match.
     /// </summary>
     public static IEnumerable<int> AllIndexesOf(this string source, string value, StringComparison comparisonType) {
