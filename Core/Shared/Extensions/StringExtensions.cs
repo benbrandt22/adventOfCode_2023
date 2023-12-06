@@ -17,11 +17,18 @@ public static class StringExtensions
     }
 
     /// <summary>
-    /// Split a string into lines using a carriage return as the delimiter.
+    /// Split a string into lines, accounting for windows (\r\n) and linux (\n) line endings.
     /// </summary>
-    public static IList<string> ToLines(this string input, string delimiter = "\r\n")
+    public static IList<string> ToLines(this string input, bool removeEmptyLines = false)
     {
-        return input.Split(new string[] { delimiter }, StringSplitOptions.None);
+        // TODO: write some unit tests to verify line break handling, etc
+        StringSplitOptions splitOptions = StringSplitOptions.None;
+        if (removeEmptyLines)
+        {
+            splitOptions = StringSplitOptions.RemoveEmptyEntries;
+        }
+        
+        return input.Split(new string[] { "\r\n", "\r", "\n" }, splitOptions);
     }
     
     /// <summary>

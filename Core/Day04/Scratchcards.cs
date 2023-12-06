@@ -20,7 +20,7 @@ public class Scratchcards : BaseDayModule
     
     public int Part1_CardsTotalPoints(string data)
     {
-        var cards = data.ToLines().Select(ParseCard).ToList();
+        var cards = data.ToLines(removeEmptyLines: true).Select(ParseCard).ToList();
         WriteLine($"Loaded data with {cards.Count} cards.");
         
         var cardsTotalPoints = cards.Sum(x => x.PointValue());
@@ -30,7 +30,7 @@ public class Scratchcards : BaseDayModule
     
     public int Part2_CardCopies(string data)
     {
-        var cards = data.ToLines().Select(ParseCard).ToList();
+        var cards = data.ToLines(removeEmptyLines: true).Select(ParseCard).ToList();
         WriteLine($"Loaded data with {cards.Count} cards.");
 
         // set up a way to look up cards by id for easier copying
