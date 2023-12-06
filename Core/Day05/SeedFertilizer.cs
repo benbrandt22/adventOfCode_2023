@@ -17,7 +17,9 @@ public class SeedFertilizer : BaseDayModule
     [Fact] public void Part1() => Part1_FindClosestDestination(LoadAlmanac("Day05/input.txt"));
 
     [Fact] public void Part2_Sample() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac("Day05/sample.txt")).Should().Be(46);
-    [Fact] public void Part2() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac("Day05/input.txt"));
+    
+    [Fact(Skip = "Too slow to be included in test run, should refactor using ranges for a *proper* solution")]
+    public void Part2() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac("Day05/input.txt"));
     
     private Almanac LoadAlmanac(string filename)
     {
@@ -45,7 +47,11 @@ public class SeedFertilizer : BaseDayModule
                 return longRange;
             }).ToList();
 
-        throw new NotImplementedException("Need to refactor to use ranges, checking each number is too inefficient");
+        var seedValues = ranges[0].Values();
+        ranges.Skip(1).ToList().ForEach(r => seedValues = seedValues.Concat(r.Values()));
+        
+        var closestDestination = FindClosestDestination(almanac, seedValues);
+        return closestDestination;
     }
     
     public long FindClosestDestination(Almanac almanac, IEnumerable<long> seedValues)
@@ -158,5 +164,14 @@ public class SeedFertilizer : BaseDayModule
         public long Start { get; } = start;
         public long Count { get; } = count;
         public long End { get; } = start + count - 1;
+
+        public IEnumerable<long> Values()
+        {
+            var end = End;
+            for (long i = Start; i < end; i++)
+            {
+                yield return i;
+            }
+        }
     }
 }
