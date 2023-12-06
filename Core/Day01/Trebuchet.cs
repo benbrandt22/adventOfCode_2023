@@ -11,10 +11,10 @@ public class Trebuchet : BaseDayModule
     public override int Day => 1;
     public override string Title => "Trebuchet?!";
 
-    [Fact] public void Part1Sample() => ProcessPart1("Day01/day1-sample.txt").Should().Be(142);
-    [Fact] public void Part1Input() => ProcessPart1("Day01/day1-input.txt");
-    [Fact] public void Part2Sample() => ProcessPart2("Day01/day1-samplePart2.txt").Should().Be(281);
-    [Fact] public void Part2Input() => ProcessPart2("Day01/day1-input.txt");
+    [Fact] public void Part1Sample() => ProcessPart1("Day01/sample.txt").Should().Be(142);
+    [Fact] public void Part1Input() => ProcessPart1("Day01/input.txt");
+    [Fact] public void Part2Sample() => ProcessPart2("Day01/sample2.txt").Should().Be(281);
+    [Fact] public void Part2Input() => ProcessPart2("Day01/input.txt");
 
     public int ProcessPart1(string filename)
     {
