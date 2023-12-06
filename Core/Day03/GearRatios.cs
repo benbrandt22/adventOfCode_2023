@@ -13,16 +13,16 @@ public class GearRatios : BaseDayModule
     public override int Day => 3;
     public override string Title => "Gear Ratios";
 
-    [Fact] public void Part1_Sample() => Part1_PartNumbersTotal("Day03/sample.txt").Should().Be(4361);
-    [Fact] public void Part1() => Part1_PartNumbersTotal("Day03/input.txt");
+    [Fact] public void Part1_Sample() => Part1_PartNumbersTotal(GetData(InputType.Sample)).Should().Be(4361);
+    [Fact] public void Part1() => Part1_PartNumbersTotal(GetData(InputType.Input));
 
-    [Fact] public void Part2_Sample() => Part2_TotalGearRatio("Day03/sample.txt").Should().Be(467835);
-    [Fact] public void Part2() => Part2_TotalGearRatio("Day03/input.txt");
+    [Fact] public void Part2_Sample() => Part2_TotalGearRatio(GetData(InputType.Sample)).Should().Be(467835);
+    [Fact] public void Part2() => Part2_TotalGearRatio(GetData(InputType.Input));
     
-    public int Part1_PartNumbersTotal(string filename)
+    public int Part1_PartNumbersTotal(string data)
     {
-        var lines = TextFileLoader.LoadLines(filename).ToList();
-        WriteLine($"Loaded Engine {filename} with {lines.Count} lines.");
+        var lines = data.ToLines().ToList();
+        WriteLine($"Loaded Engine data with {lines.Count} lines.");
 
         var allSymbols = new List<EngineSubstring>();
         var allNumbers = new List<EngineSubstring>();
@@ -45,10 +45,10 @@ public class GearRatios : BaseDayModule
         return partNumbersTotal;
     }
     
-    public long Part2_TotalGearRatio(string filename)
+    public long Part2_TotalGearRatio(string data)
     {
-        var lines = TextFileLoader.LoadLines(filename).ToList();
-        WriteLine($"Loaded Engine {filename} with {lines.Count} lines.");
+        var lines = data.ToLines().ToList();
+        WriteLine($"Loaded Engine data with {lines.Count} lines.");
 
         var potentialGears = new List<EngineSubstring>();
         var allNumbers = new List<EngineSubstring>();

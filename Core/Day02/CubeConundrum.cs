@@ -13,16 +13,16 @@ public class CubeConundrum : BaseDayModule
     public override int Day => 2;
     public override string Title => "Cube Conundrum";
 
-    [Fact] public void Part1_Sample() => Part1_TotalOfPossibleGameIds("Day02/sample.txt").Should().Be(8);
-    [Fact] public void Part1() => Part1_TotalOfPossibleGameIds("Day02/input.txt");
+    [Fact] public void Part1_Sample() => Part1_TotalOfPossibleGameIds(GetData(InputType.Sample)).Should().Be(8);
+    [Fact] public void Part1() => Part1_TotalOfPossibleGameIds(GetData(InputType.Input));
     
-    [Fact] public void Part2_Sample() => Part2_TotalOfMinimumBagPowers("Day02/sample.txt").Should().Be(2286);
-    [Fact] public void Part2() => Part2_TotalOfMinimumBagPowers("Day02/input.txt");
+    [Fact] public void Part2_Sample() => Part2_TotalOfMinimumBagPowers(GetData(InputType.Sample)).Should().Be(2286);
+    [Fact] public void Part2() => Part2_TotalOfMinimumBagPowers(GetData(InputType.Input));
     
-    public int Part1_TotalOfPossibleGameIds(string filename)
+    public int Part1_TotalOfPossibleGameIds(string data)
     {
-        var games = TextFileLoader.LoadLines(filename).Select(ParseGame).ToList();
-        WriteLine($"Loaded {filename} with {games.Count} games.");
+        var games = data.ToLines().Select(ParseGame).ToList();
+        WriteLine($"Loaded data with {games.Count} games.");
 
         var theoreticalBag = new CubeGameBag(new List<CubeColorQuantity>()
         {
@@ -44,10 +44,10 @@ public class CubeConundrum : BaseDayModule
         return sumOfGameIds;
     }
     
-    public int Part2_TotalOfMinimumBagPowers(string filename)
+    public int Part2_TotalOfMinimumBagPowers(string data)
     {
-        var games = TextFileLoader.LoadLines(filename).Select(ParseGame).ToList();
-        WriteLine($"Loaded {filename} with {games.Count} games.");
+        var games = data.ToLines().Select(ParseGame).ToList();
+        WriteLine($"Loaded data with {games.Count} games.");
 
         var totalMinimumBagPowers = games
             .Select(CalculateMinimumViableBag)

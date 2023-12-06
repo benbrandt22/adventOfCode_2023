@@ -12,14 +12,14 @@ public class WaitForIt : BaseDayModule
     public override int Day => 6;
     public override string Title => "Wait For It";
 
-    [Fact] public void Part1_Sample() => Execute(LoadRacesPart1("Day06/sample.txt")).Should().Be(288);
-    [Fact] public void Part1() => Execute(LoadRacesPart1("Day06/input.txt"));
+    [Fact] public void Part1_Sample() => Execute(LoadRacesPart1(GetData(InputType.Sample))).Should().Be(288);
+    [Fact] public void Part1() => Execute(LoadRacesPart1(GetData(InputType.Input)));
 
-    [Fact] public void Part2_Sample() => Execute(LoadRacesPart2("Day06/sample.txt")).Should().Be(71503);
-    [Fact] public void Part2() => Execute(LoadRacesPart2("Day06/input.txt"));
+    [Fact] public void Part2_Sample() => Execute(LoadRacesPart2(GetData(InputType.Sample))).Should().Be(71503);
+    [Fact] public void Part2() => Execute(LoadRacesPart2(GetData(InputType.Input)));
 
-    public List<BoatRace> LoadRacesPart1(string filename) => ParseRaces(TextFileLoader.LoadText(filename), false);
-    public List<BoatRace> LoadRacesPart2(string filename) => ParseRaces(TextFileLoader.LoadText(filename), true);
+    public List<BoatRace> LoadRacesPart1(string data) => ParseRaces(data, false);
+    public List<BoatRace> LoadRacesPart2(string data) => ParseRaces(data, true);
 
     public long Execute(List<BoatRace> races)
     {
