@@ -21,7 +21,7 @@ public class CubeConundrum : BaseDayModule
     
     public int Part1_TotalOfPossibleGameIds(string data)
     {
-        var games = data.ToLines().Select(ParseGame).ToList();
+        var games = data.ToLines(removeEmptyLines: true).Select(ParseGame).ToList();
         WriteLine($"Loaded data with {games.Count} games.");
 
         var theoreticalBag = new CubeGameBag(new List<CubeColorQuantity>()
@@ -46,7 +46,7 @@ public class CubeConundrum : BaseDayModule
     
     public int Part2_TotalOfMinimumBagPowers(string data)
     {
-        var games = data.ToLines().Select(ParseGame).ToList();
+        var games = data.ToLines(removeEmptyLines: true).Select(ParseGame).ToList();
         WriteLine($"Loaded data with {games.Count} games.");
 
         var totalMinimumBagPowers = games

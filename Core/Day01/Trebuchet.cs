@@ -18,7 +18,7 @@ public class Trebuchet : BaseDayModule
 
     public int ProcessPart1(string data)
     {
-        var lines = data.ToLines();
+        var lines = data.ToLines(removeEmptyLines: true);
         WriteLine($"Loaded data with {lines.Count} lines.");
 
         var totalDigitsOnlyCalibrationValue = lines
@@ -39,7 +39,7 @@ public class Trebuchet : BaseDayModule
     
     public int ProcessPart2(string data)
     {
-        var lines = data.ToLines();
+        var lines = data.ToLines(removeEmptyLines: true);
         WriteLine($"Loaded data with {lines.Count} lines.");
 
         var totalCalibrationValue = lines
