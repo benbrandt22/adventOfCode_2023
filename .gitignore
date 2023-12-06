@@ -6,3 +6,4 @@ riderModule.iml
 .vs/
 .idea/
 *.DotSettings.user
+Core/Day*/*input*.txt

@@ -13,19 +13,17 @@ public class SeedFertilizer : BaseDayModule
     public override int Day => 5;
     public override string Title => "If You Give A Seed A Fertilizer";
 
-    [Fact] public void Part1_Sample() => Part1_FindClosestDestination(LoadAlmanac("Day05/sample.txt")).Should().Be(35);
-    [Fact] public void Part1() => Part1_FindClosestDestination(LoadAlmanac("Day05/input.txt"));
+    [Fact] public void Part1_Sample() => Part1_FindClosestDestination(LoadAlmanac(GetData(InputType.Sample))).Should().Be(35);
+    [Fact] public void Part1() => Part1_FindClosestDestination(LoadAlmanac(GetData(InputType.Input)));
 
-    [Fact] public void Part2_Sample() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac("Day05/sample.txt")).Should().Be(46);
+    [Fact] public void Part2_Sample() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac(GetData(InputType.Sample))).Should().Be(46);
     
     [Fact(Skip = "Too slow to be included in test run, should refactor using ranges for a *proper* solution")]
-    public void Part2() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac("Day05/input.txt"));
+    public void Part2() => Part2_FindClosestDestinationUsingSeedRanges(LoadAlmanac(GetData(InputType.Input)));
     
-    private Almanac LoadAlmanac(string filename)
+    private Almanac LoadAlmanac(string data)
     {
-        var input = TextFileLoader.LoadText(filename);
-        WriteLine($"Loaded {filename}");
-        return ParseInput(input);
+        return ParseInput(data);
     }
     
     public long Part1_FindClosestDestination(Almanac almanac)

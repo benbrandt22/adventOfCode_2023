@@ -11,15 +11,15 @@ public class Trebuchet : BaseDayModule
     public override int Day => 1;
     public override string Title => "Trebuchet?!";
 
-    [Fact] public void Part1Sample() => ProcessPart1("Day01/day1-sample.txt").Should().Be(142);
-    [Fact] public void Part1Input() => ProcessPart1("Day01/day1-input.txt");
-    [Fact] public void Part2Sample() => ProcessPart2("Day01/day1-samplePart2.txt").Should().Be(281);
-    [Fact] public void Part2Input() => ProcessPart2("Day01/day1-input.txt");
+    [Fact] public void Part1Sample() => ProcessPart1(GetData(InputType.Sample)).Should().Be(142);
+    [Fact] public void Part1Input() => ProcessPart1(GetData(InputType.Input));
+    [Fact] public void Part2Sample() => ProcessPart2(GetData("sample2")).Should().Be(281);
+    [Fact] public void Part2Input() => ProcessPart2(GetData(InputType.Input));
 
-    public int ProcessPart1(string filename)
+    public int ProcessPart1(string data)
     {
-        var lines = TextFileLoader.LoadLines(filename).ToList();
-        WriteLine($"Loaded {filename} with {lines.Count} lines.");
+        var lines = data.ToLines(removeEmptyLines: true);
+        WriteLine($"Loaded data with {lines.Count} lines.");
 
         var totalDigitsOnlyCalibrationValue = lines
             .Select(line => DigitsOnlyCalibrationValue(line))
@@ -37,10 +37,10 @@ public class Trebuchet : BaseDayModule
         return value;
     }
     
-    public int ProcessPart2(string filename)
+    public int ProcessPart2(string data)
     {
-        var lines = TextFileLoader.LoadLines(filename).ToList();
-        WriteLine($"Loaded {filename} with {lines.Count} lines.");
+        var lines = data.ToLines(removeEmptyLines: true);
+        WriteLine($"Loaded data with {lines.Count} lines.");
 
         var totalCalibrationValue = lines
             .Select(line => DigitsOrWordsCalibrationValue(line))

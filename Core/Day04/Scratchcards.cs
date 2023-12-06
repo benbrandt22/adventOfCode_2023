@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Core.Shared;
+using Core.Shared.Extensions;
 using Core.Shared.Modules;
 
 namespace Core.Day04;
@@ -11,26 +12,26 @@ public class Scratchcards : BaseDayModule
     public override int Day => 4;
     public override string Title => "Scratchcards";
 
-    [Fact] public void Part1_Sample() => Part1_CardsTotalPoints("Day04/sample.txt").Should().Be(13);
-    [Fact] public void Part1() => Part1_CardsTotalPoints("Day04/input.txt");
+    [Fact] public void Part1_Sample() => Part1_CardsTotalPoints(GetData(InputType.Sample)).Should().Be(13);
+    [Fact] public void Part1() => Part1_CardsTotalPoints(GetData(InputType.Input));
 
-    [Fact] public void Part2_Sample() => Part2_CardCopies("Day04/sample.txt").Should().Be(30);
-    [Fact] public void Part2() => Part2_CardCopies("Day04/input.txt");
+    [Fact] public void Part2_Sample() => Part2_CardCopies(GetData(InputType.Sample)).Should().Be(30);
+    [Fact] public void Part2() => Part2_CardCopies(GetData(InputType.Input));
     
-    public int Part1_CardsTotalPoints(string filename)
+    public int Part1_CardsTotalPoints(string data)
     {
-        var cards = TextFileLoader.LoadLines(filename).Select(ParseCard).ToList();
-        WriteLine($"Loaded {filename} with {cards.Count} cards.");
+        var cards = data.ToLines(removeEmptyLines: true).Select(ParseCard).ToList();
+        WriteLine($"Loaded data with {cards.Count} cards.");
         
         var cardsTotalPoints = cards.Sum(x => x.PointValue());
         WriteLine($"Total Points: {cardsTotalPoints}");
         return cardsTotalPoints;
     }
     
-    public int Part2_CardCopies(string filename)
+    public int Part2_CardCopies(string data)
     {
-        var cards = TextFileLoader.LoadLines(filename).Select(ParseCard).ToList();
-        WriteLine($"Loaded {filename} with {cards.Count} cards.");
+        var cards = data.ToLines(removeEmptyLines: true).Select(ParseCard).ToList();
+        WriteLine($"Loaded data with {cards.Count} cards.");
 
         // set up a way to look up cards by id for easier copying
         var originalCardsById = cards.ToDictionary(x => x.Id, x => x);
