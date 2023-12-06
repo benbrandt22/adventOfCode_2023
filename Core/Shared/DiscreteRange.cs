@@ -1,10 +1,13 @@
-﻿namespace Core.Shared;
+﻿using System.Diagnostics;
+
+namespace Core.Shared;
 
 /// <summary>
 /// Range class for discrete numbers. Treats the range as a set of numbers,
 /// not a continuous range like date/time ranges or decimal/double ranges.
 /// The main difference is the behavior of the subtraction method.
 /// </summary>
+[DebuggerDisplay("[{Min} to {Max}]")]
 public class DiscreteRange
 {
     public long Min { get; }
