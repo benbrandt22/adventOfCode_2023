@@ -25,7 +25,7 @@ then copy the value (long chain of numbers and letters) of the session cookie.
 * Run the command `dotnet user-secrets init`
 * Then `dotnet user-secrets set "session" "cookie"` but replace the word `cookie`
   with the actual cookie copied from the site.
-* Next time the code can't fin an input file on disk, it will download from the site using your session cookie. See 
+* Next time the code can't find an input file on disk, it will download from the site using your session cookie. See 
   `InputDataProvider` for details.
 
 This only downloads input files that aren't on disk, so if you need to replace
