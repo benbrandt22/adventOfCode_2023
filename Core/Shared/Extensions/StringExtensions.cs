@@ -66,4 +66,19 @@ public static class StringExtensions
         }
         return results.OrderBy(x => x.index).ToList();
     }
+    
+    /// <summary>
+    /// Replaces the character at the specified index in a string.
+    /// </summary>
+    public static string ReplaceAt(this string input, int index, char newChar)
+    {
+        // TODO: write some unit tests to verify expected behavior here
+        if (input == null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+        var chars = input.ToCharArray();
+        chars[index] = newChar;
+        return new string(chars);
+    }
 }
