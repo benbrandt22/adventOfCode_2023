@@ -89,7 +89,7 @@ public class SeedFertilizer : BaseDayModule
         
         var rangesRegEx = new Regex(@"^(?<destinationStart>\d+) (?<sourceStart>\d+) (?<rangeLength>\d+)$", RegexOptions.None);
 
-        map.Ranges = text.ToLines().Skip(1).Select(line => rangesRegEx.Match(line).MapTo<AlmanacMapRange>()).ToList();
+        map.Ranges = text.ToLines(true).Skip(1).Select(line => rangesRegEx.Match(line).MapTo<AlmanacMapRange>()).ToList();
         
         return map;
     }

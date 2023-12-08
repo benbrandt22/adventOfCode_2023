@@ -4,6 +4,11 @@ namespace Tests;
 
 public class StringExtensionsTests(ITestOutputHelper outputHelper)
 {
+    private string WriteOutEscapedLinefeeds(string input)
+    {
+        return input.Replace("\r", "\\r").Replace("\n", "\\n");
+    }
+    
     [Theory]
     [InlineData("abc", "a", new[] { 0 })]
     [InlineData("abc", "b", new[] { 1 })]
@@ -53,4 +58,81 @@ public class StringExtensionsTests(ITestOutputHelper outputHelper)
         result.Should().Be(expected);
     }
     
+    [Theory]
+    [InlineData("abc", new[] { "abc" })]
+    [InlineData("abc\r\n\r\n123", new[] { "abc", "123" })]
+    [InlineData("abc\r\n123", new[] { "abc\r\n123" })]
+    [InlineData("abc\n\n123", new[] { "abc", "123" })]
+    [InlineData("abc\n123", new[] { "abc\n123" })]
+    [InlineData("Section\r\nOne\r\n\r\nSection\r\nTwo", new[] { "Section\r\nOne", "Section\r\nTwo" })]
+    public void ToParagraphs_Returns_Expected_Results(string input, string[] expected)
+    {
+        outputHelper.WriteLine($"input:\r\n{WriteOutEscapedLinefeeds(input)}");
+        var result = input.ToParagraphs();
+        result.Should().BeEquivalentTo(expected);
+    }
+    
+    [Theory]
+    [InlineData("abc", new[] { "abc" })]
+    [InlineData("abc\r\n123", new[] { "abc", "123" })]
+    [InlineData("abc\n123", new[] { "abc", "123" })]
+    [InlineData("abc\r\n\r\n123", new[] { "abc", "", "123" })]
+    [InlineData("abc\n\n123", new[] { "abc", "", "123" })]
+    [InlineData("abc\n123\n", new[] { "abc", "123", "" })]
+    public void ToLines_Returns_Expected_Results(string input, string[] expected)
+    {
+        outputHelper.WriteLine($"input:\r\n{WriteOutEscapedLinefeeds(input)}");
+        var result = input.ToLines();
+        result.Should().BeEquivalentTo(expected);
+    }
+    
+    [Theory]
+    [InlineData("abc", new[] { "abc" })]
+    [InlineData("abc\r\n123", new[] { "abc", "123" })]
+    [InlineData("abc\n123", new[] { "abc", "123" })]
+    [InlineData("abc\r\n\r\n123", new[] { "abc", "123" })]
+    [InlineData("abc\n\n123", new[] { "abc", "123" })]
+    [InlineData("abc\n123\n", new[] { "abc", "123" })]
+    public void ToLines_With_RemoveEmptyLines_Returns_Expected_Results(string input, string[] expected)
+    {
+        outputHelper.WriteLine($"input:\r\n{WriteOutEscapedLinefeeds(input)}");
+        var result = input.ToLines(true);
+        result.Should().BeEquivalentTo(expected);
+    }
+
+    [Theory]
+    [InlineData("abc", 0, 'x', "xbc")]
+    [InlineData("abc", 1, 'x', "axc")]
+    [InlineData("abc", 2, 'x', "abx")]
+    public void ReplaceAt_Returns_Expected_Results(string input, int index, char newChar, string expected)
+    {
+        outputHelper.WriteLine($"input: \"{input}\" index: {index} newChar: {newChar}");
+        var result = input.ReplaceAt(index, newChar);
+        result.Should().Be(expected);
+    }
+    
+    [Fact]
+    public void ReplaceAt_With_Index_Out_Of_Range_Throws_ArgumentOutOfRangeException()
+    {
+        Action indexLow = () => "abc".ReplaceAt(-1, 'x');
+        indexLow.Should().Throw<IndexOutOfRangeException>();
+        
+        Action indexHigh = () => "abc".ReplaceAt(3, 'x');
+        indexHigh.Should().Throw<IndexOutOfRangeException>();
+    }
+    
+    [Fact]
+    public void ReplaceAt_With_Empty_Input_Throws_ArgumentException()
+    {
+        Action nullInput = () => string.Empty.ReplaceAt(0, 'x');
+        nullInput.Should().Throw<ArgumentException>();
+    }
+    
+    [Fact]
+    public void ReplaceAt_With_Null_Input_Throws_ArgumentNullException()
+    {
+        Action nullInput = () => ((string)null!).ReplaceAt(0, 'x');
+        nullInput.Should().Throw<ArgumentNullException>();
+    }
+
 }

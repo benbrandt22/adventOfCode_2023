@@ -9,11 +9,11 @@ public static class StringExtensions
     public static string JoinWith(this IEnumerable<string> values, string separator) => string.Join(separator, values);
     
     /// <summary>
-    /// Splits a string into paragraphs using two carriage returns as the delimiter.
+    /// Splits a string into paragraphs using two carriage returns (blank line) as the delimiter.
     /// </summary>
-    public static IList<string> ToParagraphs(this string input, string delimiter = "\r\n\r\n")
+    public static IList<string> ToParagraphs(this string input)
     {
-        return input.Split(new string[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
+        return input.Split(new string[] { "\r\n\r\n", "\r\r", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
     }
 
     /// <summary>
@@ -21,7 +21,6 @@ public static class StringExtensions
     /// </summary>
     public static IList<string> ToLines(this string input, bool removeEmptyLines = false)
     {
-        // TODO: write some unit tests to verify line break handling, etc
         StringSplitOptions splitOptions = StringSplitOptions.None;
         if (removeEmptyLines)
         {
@@ -72,11 +71,7 @@ public static class StringExtensions
     /// </summary>
     public static string ReplaceAt(this string input, int index, char newChar)
     {
-        // TODO: write some unit tests to verify expected behavior here
-        if (input == null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(input, nameof(input));
         var chars = input.ToCharArray();
         chars[index] = newChar;
         return new string(chars);
