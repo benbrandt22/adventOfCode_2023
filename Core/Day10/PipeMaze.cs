@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
 using Core.Shared;
 using Core.Shared.Extensions;
 using Core.Shared.Modules;
@@ -15,8 +17,10 @@ public class PipeMaze : BaseDayModule
     [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(8);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(1);
+    [Fact] public void Part2_Sample2() => ExecutePart2(GetData("sample2")).Should().Be(4);
+    [Fact] public void Part2_Sample3() => ExecutePart2(GetData("sample3")).Should().Be(10);
+    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public int ExecutePart1(string data)
     {
@@ -33,15 +37,71 @@ public class PipeMaze : BaseDayModule
         WriteLine($"Loop Midpoint Distance From Start: {midpointDistanceFromStart}");
         return midpointDistanceFromStart;
     }
+    
+    public int ExecutePart2(string data)
+    {
+        var pipeMap = ParsePipeMap(data);
+        WriteLine($"Part 2 - Loaded Pipe Grid with {pipeMap.Rows} rows & {pipeMap.Columns} columns");
+        var loop = FindLoop(pipeMap);
+        var loopCoordinates = loop.Select(x => new Coordinate(x.Row, x.Column)).ToList();
 
-    private List<LinkedGridCell<PipeFitting>> FindLoop(LinkedGrid<PipeFitting> pipeMap)
+        bool IsBorder(LinkedGridCell<PipeFitting> cell) => loopCoordinates!.Contains(new Coordinate(cell.Row, cell.Column));
+        
+        // replace any non-border cell with a "ground" cell
+        foreach (var cell in pipeMap.AllCells)
+        {
+            if (!IsBorder(cell))
+            {
+                cell.Value = PipeFittingLookup['.'];
+            }
+        }
+        WriteLine(PipeMapAsString(pipeMap, true));
+
+        // Now we have a grid that ONLY includes the full loop. Analyze each point in the grid to see if it's inside or outside the loop
+        // Do this by looking at each point and how many times it crosses inside/outside the loop
+        
+        // define what kind of borders flip the inside/outside state when looking horizontally
+        // That is: | vertical pipe, F--7 with 0 or more horizontal pipes between, or L--7 with 0 or more horizontal pipes between
+        var borderCrossingsRegex = new Regex(@"\||(F-*J)|(L-*7)");
+        
+        var insideTileCount = 0;
+        foreach (var line in PipeMapAsString(pipeMap).ToLines(true))
+        {
+            for (int i = 0; i < line.Length; i++)
+            {
+                bool isBorder = line[i] != '.';
+                if (!isBorder)
+                {
+                    var tilesToTheLeft = line.Substring(0, i);
+                    var bordersCrossedToTheLeft = borderCrossingsRegex.Matches(tilesToTheLeft).Count;
+                    var isInside = bordersCrossedToTheLeft % 2 == 1; // (crossed an odd number of borders to the left) => inside
+                    if (isInside)
+                    {
+                        insideTileCount++;
+                    }
+                }
+            }
+        }
+
+        WriteLine($"Inside tiles: {insideTileCount}");
+        return insideTileCount;
+    }
+
+    /// <summary>
+    /// Finds the cells that make up the loop in the pipe map
+    /// </summary>
+    /// <param name="pipeMap"></param>
+    /// <param name="updateStartCell">Rewrites the start cell with the proper pipe fitting that must exist there</param>
+    private List<LinkedGridCell<PipeFitting>> FindLoop(LinkedGrid<PipeFitting> pipeMap, bool updateStartCell = true)
     {
         var startingCell = pipeMap.AllCells.First(cell => cell.Value?.Id == 'S');
         var loopMap = new List<LinkedGridCell<PipeFitting>>();
         loopMap.Add(startingCell);
         
         var currentCell = startingCell;
-        var currentDirection = GetStartingDirection(currentCell);
+        var startingDirection = GetStartingDirection(currentCell);
+        var startCellDir1 = startingDirection;
+        var currentDirection = startingDirection;
         // move off the starting cell and start mapping the pipe fittings
         currentCell = currentCell.GetNeighbor(ToGridDirection(currentDirection))!;
         while (true)
@@ -56,6 +116,15 @@ public class PipeMaze : BaseDayModule
             currentCell = currentCell.GetNeighbor(ToGridDirection(nextDirection.Value))!;
             currentDirection = nextDirection.Value;
             if (currentCell.Value!.Id == 'S') { break; }
+        }
+        var startCellDir2 = FlipDirection(currentDirection);
+        
+        if (updateStartCell)
+        {
+            var startPipeFitting = PipeFittingLookup.Values
+                .Single(f => (f.End1 == startCellDir1 && f.End2 == startCellDir2) ||
+                            (f.End2 == startCellDir1 && f.End1 == startCellDir2));
+            startingCell.Value = startPipeFitting;
         }
 
         return loopMap;
@@ -80,15 +149,6 @@ public class PipeMaze : BaseDayModule
         if (startingCell.NeighborDown != null && startingCell.NeighborDown.Value!.CanEnterAt(Direction.North)) { return Direction.South; }
         if (startingCell.NeighborLeft != null && startingCell.NeighborLeft.Value!.CanEnterAt(Direction.East)) { return Direction.West; }
         throw new Exception("Could not find starting direction");
-    }
-
-    public int ExecutePart2(string data)
-    {
-        WriteLine($"Part 2 - Loaded Data");
-
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
     }
 
     private LinkedGrid<PipeFitting> ParsePipeMap(string data)
@@ -138,6 +198,28 @@ public class PipeMaze : BaseDayModule
         { 'F', new PipeFitting('F', Direction.South, Direction.East)}
     };
     
+    public string PipeMapAsString(LinkedGrid<PipeFitting> pipeMap, bool drawCorners = false)
+    {
+        var output = new StringBuilder();
+        for (int row = 0; row < pipeMap.Rows; row++)
+        {
+            var rowChars = Enumerable.Range(0, pipeMap.Columns)
+                .Select(col => pipeMap[row, col].Value!.Id)
+                .ToArray();
+            var rowString = new string(rowChars);
+            if (drawCorners)
+            {
+                rowString = rowString
+                    .Replace('F', '┌')
+                    .Replace('7', '┐')
+                    .Replace('J', '┘')
+                    .Replace('L', '└');
+            }
+            output.AppendLine(rowString);
+        }
+        return output.ToString();
+    }
+    
     public enum Direction { North, East, South, West }
     
     public LinkedGridDirection ToGridDirection(Direction direction)
@@ -151,5 +233,7 @@ public class PipeMaze : BaseDayModule
             _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
         };
     }
+    
+    public record Coordinate(int Row, int Column);
 }
 
