@@ -86,12 +86,16 @@ public class CosmicExpansion : BaseDayModule
     {
         public long FindGridPathDistance(ExpansionZones expansionZones, int expansionFactor)
         {
+            // uses "Taxicab Geometry" or "Manhattan Distance" to find the distance between two points
+            // https://en.wikipedia.org/wiki/Taxicab_geometry
             var xDistance = Math.Abs(GalaxyA.Location.X - GalaxyB.Location.X);
+            
             var minX = Math.Min(GalaxyA.Location.X, GalaxyB.Location.X);
             var maxX = Math.Max(GalaxyA.Location.X, GalaxyB.Location.X);
             var expansionColumnsCrossed = expansionZones.ColumnIndexes.Count(ci => ci >= minX && ci <= maxX);
             
             var yDistance = Math.Abs(GalaxyA.Location.Y - GalaxyB.Location.Y);
+            
             var minY = Math.Min(GalaxyA.Location.Y, GalaxyB.Location.Y);
             var maxY = Math.Max(GalaxyA.Location.Y, GalaxyB.Location.Y);
             var expansionRowsCrossed = expansionZones.RowIndexes.Count(ri => ri >= minY && ri <= maxY);
