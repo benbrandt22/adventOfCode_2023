@@ -66,11 +66,9 @@ public class CosmicExpansion : BaseDayModule
     {
         var columnIndexesOfEmptiness = Enumerable.Range(0, skyMapLines[0].Length)
             .Where(i => skyMapLines.All(line => line[i] == '.'))
-            .OrderDescending()
             .ToList();
         var rowIndexesOfEmptiness = Enumerable.Range(0, skyMapLines.Count)
             .Where(i => skyMapLines[i].All(c => c == '.'))
-            .OrderDescending()
             .ToList();
 
         return new ExpansionZones(columnIndexesOfEmptiness, rowIndexesOfEmptiness);
