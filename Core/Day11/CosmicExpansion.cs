@@ -12,36 +12,17 @@ public class CosmicExpansion : BaseDayModule
     public override int Day => 11;
     public override string Title => "Cosmic Expansion";
 
-    [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(374);
-    [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
+    [Fact] public void Part1_Sample() => AnalyzeGalaxies(GetData(InputType.Sample), 2).Should().Be(374);
+    [Fact] public void Part1() => AnalyzeGalaxies(GetData(InputType.Input), 2);
 
-    [Fact] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample), 10).Should().Be(1030);
-    [Fact] public void Part2_Sample2() => ExecutePart2(GetData(InputType.Sample), 100).Should().Be(8410);
-    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input), 1000000);
+    [Fact] public void Part2_Sample() => AnalyzeGalaxies(GetData(InputType.Sample), 10).Should().Be(1030);
+    [Fact] public void Part2_Sample2() => AnalyzeGalaxies(GetData(InputType.Sample), 100).Should().Be(8410);
+    [Fact] public void Part2() => AnalyzeGalaxies(GetData(InputType.Input), 1000000);
 
-    public long ExecutePart1(string data)
-    {
-        var lines = data.ToLines(true).ToList();
-        WriteLine($"Part 1 - Loaded telescope image - Width: {lines[0].Length}, Height: {lines.Count}");
-        var skyMapLines = ExpandTelescopeImage(lines);
-        WriteLine($"Expanded telescope image - Width: {skyMapLines[0].Length}, Height: {skyMapLines.Count}");
-        
-        var galaxies = LocateGalaxies(skyMapLines);
-        WriteLine($"Located {galaxies.Count} galaxies");
-        
-        var galaxyPairs = IdentifyGalaxyPairs(galaxies);
-        WriteLine($"Identified {galaxyPairs.Count} galaxy pairs");
-        
-        var totalPairDistances = galaxyPairs.Sum(gp => gp.FindGridPathDistance());
-        
-        WriteLine($"Total Galaxy-Pair Distances: {totalPairDistances}");
-        return totalPairDistances;
-    }
-    
-    public long ExecutePart2(string data, int expansionFactor)
+    public long AnalyzeGalaxies(string data, int expansionFactor)
     {
         var skyMapLines = data.ToLines(true).ToList();
-        WriteLine($"Part 2 - Loaded telescope image - Width: {skyMapLines[0].Length}, Height: {skyMapLines.Count}");
+        WriteLine($"Loaded telescope image - Width: {skyMapLines[0].Length}, Height: {skyMapLines.Count}");
         var expansionZones = FindExpansionZones(skyMapLines);
         WriteLine($"Expansion Zones: {expansionZones.RowIndexes.Count} rows, {expansionZones.ColumnIndexes.Count} columns");
 
@@ -53,7 +34,7 @@ public class CosmicExpansion : BaseDayModule
         
         var totalPairDistances = galaxyPairs.Sum(gp => gp.FindGridPathDistance(expansionZones, expansionFactor));
         
-        WriteLine($"Total Galaxy-Pair Distances: {totalPairDistances}");
+        WriteLine($"Total Galaxy-Pair Distances (Expansion factor {expansionFactor}): {totalPairDistances}");
         return totalPairDistances;
     }
 
@@ -81,30 +62,6 @@ public class CosmicExpansion : BaseDayModule
         return galaxyPairs;
     }
 
-    private List<string> ExpandTelescopeImage(List<string> lines)
-    {
-        var expansionZones = FindExpansionZones(lines);
-
-        // insert new columns
-        lines = lines
-            .Select(line =>
-            {
-                foreach (var ci in expansionZones.ColumnIndexes.OrderDescending())
-                {
-                    line = line.Insert(ci, ".");
-                }
-
-                return line;
-            })
-            .ToList();
-        
-        // insert new rows
-        expansionZones.RowIndexes.OrderDescending().ToList()
-            .ForEach(ri => lines.Insert(ri, new string('.', lines[0].Length)));
-        
-        return lines;
-    }
-    
     private ExpansionZones FindExpansionZones(List<string> skyMapLines)
     {
         var columnIndexesOfEmptiness = Enumerable.Range(0, skyMapLines[0].Length)
@@ -127,13 +84,6 @@ public class CosmicExpansion : BaseDayModule
 
     public record GalaxyPair(Galaxy GalaxyA, Galaxy GalaxyB)
     {
-        public long FindGridPathDistance()
-        {
-            var xDistance = Math.Abs(GalaxyA.Location.X - GalaxyB.Location.X);
-            var yDistance = Math.Abs(GalaxyA.Location.Y - GalaxyB.Location.Y);
-            return xDistance + yDistance;
-        }
-        
         public long FindGridPathDistance(ExpansionZones expansionZones, int expansionFactor)
         {
             var xDistance = Math.Abs(GalaxyA.Location.X - GalaxyB.Location.X);
@@ -154,4 +104,3 @@ public class CosmicExpansion : BaseDayModule
     }
 
 }
-
