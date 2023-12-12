@@ -14,10 +14,20 @@ public class HotSprings : BaseDayModule
     [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(21);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
+    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(525152);
     [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
-    public int ExecutePart1(string data)
+    [Fact]
+    public void Unfold_Test()
+    {
+        var input = new SpringRecordRow("???.###", new List<int> { 1, 1, 3 });
+        var unfolded = Unfold(input, 5);
+        unfolded.ConditionLine.Should().Be("???.###????.###????.###????.###????.###");
+        unfolded.DamagedGroupCounts.Should()
+            .BeEquivalentTo(new List<int> { 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3 });
+    }
+    
+    public long ExecutePart1(string data)
     {
         var springRecordRows = ParseSpringRecords(data);
         WriteLine($"Part 1 - Loaded {springRecordRows.Count} rows of Spring records");
@@ -28,13 +38,14 @@ public class HotSprings : BaseDayModule
         return totalPossibleArrangements;
     }
 
-    public int ExecutePart2(string data)
+    public long ExecutePart2(string data)
     {
-        WriteLine($"Part 2 - Loaded Data");
+        var springRecordRows = ParseSpringRecords(data);
+        WriteLine($"Part 2 - Loaded {springRecordRows.Count} rows of Spring records. Unfolding and analyzing..."); 
+        springRecordRows = springRecordRows.Select(x => Unfold(x, 5)).ToList();
 
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        // I can tell just the sample data will generate ridiculous amounts of possible arrangements, so brute forcing this seems like a poor choice
+        throw new NotImplementedException();
     }
 
     private List<SpringRecordRow> ParseSpringRecords(string data) =>
@@ -50,9 +61,9 @@ public class HotSprings : BaseDayModule
 
     public record SpringRecordRow(string ConditionLine, List<int> DamagedGroupCounts);
 
-    public int FindPossibleArrangements(SpringRecordRow springRecordRow)
+    public long FindPossibleArrangements(SpringRecordRow springRecordRow)
     {
-        int possibleSolutions = 0;
+        long possibleSolutions = 0;
         
         var unknownIndexes = springRecordRow.ConditionLine
             .AllIndexesOf("?", StringComparison.OrdinalIgnoreCase).ToList();
@@ -60,8 +71,8 @@ public class HotSprings : BaseDayModule
         var damageGroupRegEx = new Regex(@"#+", RegexOptions.Compiled);
         
         // since each position can be represented as a operational or damaged, we can use binary to represent all possible combinations
-        var totalPossibleCombinations = (int)Math.Pow(2, unknownIndexes.Count);
-        for (int i = 0; i < totalPossibleCombinations; i++)
+        var totalPossibleCombinations = (long)Math.Pow(2, unknownIndexes.Count);
+        for (long i = 0; i < totalPossibleCombinations; i++)
         {
             var binaryString = Convert.ToString(i, 2).PadLeft(unknownIndexes.Count, '0');
             var substitutions = binaryString.Replace('0', '#').Replace('1', '.');
@@ -82,6 +93,19 @@ public class HotSprings : BaseDayModule
         }
 
         return possibleSolutions;
+    }
+
+    public SpringRecordRow Unfold(SpringRecordRow springRecordRow, int folds)
+    {
+        var unfoldedConditionLine = Enumerable.Range(0, folds)
+            .Select(_ => springRecordRow.ConditionLine)
+            .JoinWith("?");
+
+        var unfoldedDamagedGroupCounts = Enumerable.Repeat(springRecordRow.DamagedGroupCounts, folds)
+            .SelectMany(x => x)
+            .ToList();
+        
+        return new SpringRecordRow(unfoldedConditionLine, unfoldedDamagedGroupCounts);
     }
 
 }
