@@ -14,8 +14,8 @@ public class HotSprings : BaseDayModule
     [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(21);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(525152);
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(525152);
+    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     [Fact]
     public void Unfold_Test()
@@ -32,7 +32,7 @@ public class HotSprings : BaseDayModule
         var springRecordRows = ParseSpringRecords(data);
         WriteLine($"Part 1 - Loaded {springRecordRows.Count} rows of Spring records");
         
-        var totalPossibleArrangements = springRecordRows.Sum(FindPossibleArrangements);
+        var totalPossibleArrangements = springRecordRows.Sum(FindPossibleArrangements_BruteForce);
 
         WriteLine($"Total Possible Arrangements: {totalPossibleArrangements}");
         return totalPossibleArrangements;
@@ -44,8 +44,10 @@ public class HotSprings : BaseDayModule
         WriteLine($"Part 2 - Loaded {springRecordRows.Count} rows of Spring records. Unfolding and analyzing..."); 
         springRecordRows = springRecordRows.Select(x => Unfold(x, 5)).ToList();
 
-        // I can tell just the sample data will generate ridiculous amounts of possible arrangements, so brute forcing this seems like a poor choice
-        throw new NotImplementedException();
+        var totalPossibleArrangements = springRecordRows.Sum(FindPossibleArrangements);
+
+        WriteLine($"Total Possible Arrangements: {totalPossibleArrangements}");
+        return totalPossibleArrangements;
     }
 
     private List<SpringRecordRow> ParseSpringRecords(string data) =>
@@ -61,7 +63,7 @@ public class HotSprings : BaseDayModule
 
     public record SpringRecordRow(string ConditionLine, List<int> DamagedGroupCounts);
 
-    public long FindPossibleArrangements(SpringRecordRow springRecordRow)
+    public long FindPossibleArrangements_BruteForce(SpringRecordRow springRecordRow)
     {
         long possibleSolutions = 0;
         
@@ -106,6 +108,90 @@ public class HotSprings : BaseDayModule
             .ToList();
         
         return new SpringRecordRow(unfoldedConditionLine, unfoldedDamagedGroupCounts);
+    }
+
+    private Dictionary<string, long> _cache = new();
+    
+    public long FindPossibleArrangements(SpringRecordRow springRecordRow)
+    {
+        // I acknowledge this is not my original solution, but one I adapted from someone else's posted solution,
+        // but I'm working through it as a learning exercise
+        
+        var key = $"{springRecordRow.ConditionLine},{string.Join(',', springRecordRow.DamagedGroupCounts)}";  // Cache key: spring pattern + group lengths
+ 
+        if (_cache.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+    
+        value = GetCount(springRecordRow.ConditionLine, springRecordRow.DamagedGroupCounts);
+        _cache[key] = value;
+ 
+        return value;
+    }
+ 
+    long GetCount(string springs, List<int> groups)
+    {
+        while (true)
+        {
+            if (groups.Count == 0)
+            {
+                return springs.Contains('#') ? 0 : 1; // No more groups to match: if there are no springs left, we have a match
+            }
+     
+            if (string.IsNullOrEmpty(springs))
+            {
+                return 0; // No more springs to match, although we still have groups to match
+            }
+     
+            if (springs.StartsWith('.'))
+            {
+                springs = springs.Trim('.'); // Remove all dots from the beginning
+                continue;
+            }
+     
+            if (springs.StartsWith('?'))
+            {
+                return FindPossibleArrangements(new SpringRecordRow("." + springs[1..], groups))
+                       + FindPossibleArrangements(new SpringRecordRow("#" + springs[1..], groups)); // Try both options recursively
+            }
+     
+            if (springs.StartsWith('#')) // Start of a group
+            {
+                if (groups.Count == 0)
+                {
+                    return 0; // No more groups to match, although we still have a spring in the input
+                }
+     
+                if (springs.Length < groups[0])
+                {
+                    return 0; // Not enough characters to match the group
+                }
+     
+                if (springs[..groups[0]].Contains('.'))
+                {
+                    return 0; // Group cannot contain dots for the given length
+                }
+     
+                if (groups.Count > 1)
+                {
+                    if (springs.Length < groups[0] + 1 || springs[groups[0]] == '#') 
+                    {
+                        return 0; // Group cannot be followed by a spring, and there must be enough characters left
+                    }
+     
+                    springs = springs[(groups[0] + 1)..]; // Skip the character after the group - it's either a dot or a question mark
+                    groups = groups[1..];
+                    continue;
+                }
+     
+                springs = springs[groups[0]..]; // Last group, no need to check the character after the group
+                groups = groups[1..];
+                continue;
+            }
+     
+            throw new Exception("Invalid input");
+        }
     }
 
 }
