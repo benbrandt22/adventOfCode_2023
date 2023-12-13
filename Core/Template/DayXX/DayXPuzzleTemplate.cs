@@ -18,7 +18,7 @@ public class DayXPuzzleTemplate : BaseDayModule
     [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
     [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
-    public int ExecutePart1(string data)
+    public long ExecutePart1(string data)
     {
         WriteLine($"Part 1 - Loaded Data");
 
@@ -27,7 +27,7 @@ public class DayXPuzzleTemplate : BaseDayModule
         return solution;
     }
     
-    public int ExecutePart2(string data)
+    public long ExecutePart2(string data)
     {
         WriteLine($"Part 2 - Loaded Data");
 
