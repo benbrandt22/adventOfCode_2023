@@ -76,4 +76,19 @@ public static class StringExtensions
         chars[index] = newChar;
         return new string(chars);
     }
+    
+    /// <summary>
+    /// Writes a new string over the original string starting at the specified index
+    /// </summary>
+    public static string OverwriteAt(this string input, int index, string newSubstring)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(input, nameof(input));
+        if(string.IsNullOrEmpty(newSubstring))
+        {
+            return input;
+        }
+        var before = input.Substring(0, index);
+        var after = input.Substring(index + newSubstring.Length);
+        return before + newSubstring + after;
+    }
 }

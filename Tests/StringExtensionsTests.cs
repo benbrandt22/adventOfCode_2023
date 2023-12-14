@@ -134,5 +134,20 @@ public class StringExtensionsTests(ITestOutputHelper outputHelper)
         Action nullInput = () => ((string)null!).ReplaceAt(0, 'x');
         nullInput.Should().Throw<ArgumentNullException>();
     }
+    
+    [Theory]
+    [InlineData("abc", 0, "x", "xbc")]
+    [InlineData("abc", 1, "x", "axc")]
+    [InlineData("abc", 2, "x", "abx")]
+    [InlineData("abc", 0, "xyz", "xyz")]
+    [InlineData("12345", 0, "abc", "abc45")]
+    [InlineData("12345", 1, "abc", "1abc5")]
+    [InlineData("12345", 2, "abc", "12abc")]
+    public void OverwriteAt_Returns_Expected_Results(string input, int index, string newSubstring, string expected)
+    {
+        outputHelper.WriteLine($"input: \"{input}\" index: {index} newSubstring: \"{newSubstring}\"");
+        var result = input.OverwriteAt(index, newSubstring);
+        result.Should().Be(expected);
+    }
 
 }
