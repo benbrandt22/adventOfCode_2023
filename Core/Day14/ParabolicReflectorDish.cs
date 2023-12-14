@@ -36,25 +36,52 @@ public class ParabolicReflectorDish : BaseDayModule
         var dish = ParseReflectorDish(data);
         WriteLine($"Part 1 - Loaded Reflector Dish with {dish.Rows} rows and {dish.Columns} columns");
 
-        throw new NotImplementedException(
-            "Brute force is projected to take over 20 hours for just the sample data. See if we can find a repeating pattern or memoize the results of each tip.");
-        
         var totalCycles = 1000000000;
-        WriteLine($"Spinning for {totalCycles} cycles...");
-        for (var i = 0; i < totalCycles; i++)
+        var seenArrangements = new List<string>();
+
+        // Assuming the cycle repeats at some point, find the cycle length
+        var cycleIndexStart = -1;
+        var cycleLength = -1;
+        for (int i = 0; i < totalCycles; i++)
         {
-            TipDish(dish, Direction.North);
-            TipDish(dish, Direction.West);
-            TipDish(dish, Direction.South);
-            TipDish(dish, Direction.East);
+            var currentArrangement = dish.Lines.JoinWith("\r\n");
+
+            Debug(new string('-', 20));
+            Debug($"i = {i}");
+            Debug(currentArrangement);
+            
+            var seenAt = seenArrangements.IndexOf(currentArrangement);
+
+            if (seenAt > -1)
+            {
+                WriteLine($"Current arrangement (i={i}) last seen at i={seenAt}");
+                cycleIndexStart = seenAt;
+                cycleLength = (i - seenAt);
+                break;
+            }
+            
+            seenArrangements.Add(currentArrangement);
+            SpinCycleDish(dish);
         }
         
-        var loadAtNorthSide = GetLoadAtSide(dish, Direction.North);
-
+        // Find the arrangement at the end of the cycle
+        var indexOfLastArrangement = (totalCycles - cycleIndexStart) % cycleLength;
+        
+        var finalArrangement = new ReflectorDishArrangement(seenArrangements[cycleIndexStart + indexOfLastArrangement].ToLines());
+        
+        var loadAtNorthSide = GetLoadAtSide(finalArrangement, Direction.North);
         WriteLine($"Load at North Side: {loadAtNorthSide}");
         return loadAtNorthSide;
     }
-    
+
+    private void SpinCycleDish(ReflectorDishArrangement dish)
+    {
+        TipDish(dish, Direction.North);
+        TipDish(dish, Direction.West);
+        TipDish(dish, Direction.South);
+        TipDish(dish, Direction.East);
+    }
+
     private ReflectorDishArrangement ParseReflectorDish(string data)
     {
         var lines = data.ToLines(true);
@@ -131,9 +158,9 @@ public class ParabolicReflectorDish : BaseDayModule
     private List<string> RotateGridCounterClockwise(List<string> lines)
     {
         var rotatedLines = new List<string>();
-        for (int i = 0; i < lines[0].Length; i++)
+        for (int col = lines[0].Length-1; col >= 0; col--)
         {
-            var newLine = new string(lines.Select(l => l[i]).ToArray());
+            var newLine = new string(lines.Select(l => l[col]).ToArray());
             rotatedLines.Add(newLine);
         }
 
