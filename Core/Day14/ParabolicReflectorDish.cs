@@ -1,4 +1,5 @@
-﻿using Core.Shared.Extensions;
+﻿using System.Text.RegularExpressions;
+using Core.Shared.Extensions;
 using Core.Shared.Modules;
 
 namespace Core.Day14;
@@ -13,45 +14,168 @@ public class ParabolicReflectorDish : BaseDayModule
     [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(136);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(64);
+    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)
     {
         var dish = ParseReflectorDish(data);
         WriteLine($"Part 1 - Loaded Reflector Dish with {dish.Rows} rows and {dish.Columns} columns");
 
-        throw new NotImplementedException();
-        
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        TipDish(dish, Direction.North);
+        WriteLine("Tipped North");
+
+        var loadAtNorthSide = GetLoadAtSide(dish, Direction.North);
+
+        WriteLine($"Load at North Side: {loadAtNorthSide}");
+        return loadAtNorthSide;
     }
-    
+
     public long ExecutePart2(string data)
     {
-        WriteLine($"Part 2 - Loaded Data");
+        var dish = ParseReflectorDish(data);
+        WriteLine($"Part 1 - Loaded Reflector Dish with {dish.Rows} rows and {dish.Columns} columns");
 
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        throw new NotImplementedException(
+            "Brute force is projected to take over 20 hours for just the sample data. See if we can find a repeating pattern or memoize the results of each tip.");
+        
+        var totalCycles = 1000000000;
+        WriteLine($"Spinning for {totalCycles} cycles...");
+        for (var i = 0; i < totalCycles; i++)
+        {
+            TipDish(dish, Direction.North);
+            TipDish(dish, Direction.West);
+            TipDish(dish, Direction.South);
+            TipDish(dish, Direction.East);
+        }
+        
+        var loadAtNorthSide = GetLoadAtSide(dish, Direction.North);
+
+        WriteLine($"Load at North Side: {loadAtNorthSide}");
+        return loadAtNorthSide;
     }
     
-    private ReflectorDish ParseReflectorDish(string data)
+    private ReflectorDishArrangement ParseReflectorDish(string data)
     {
         var lines = data.ToLines(true);
-        return new ReflectorDish(lines);
+        return new ReflectorDishArrangement(lines);
     }
 
-    public class ReflectorDish
+    public class ReflectorDishArrangement
     {
-        public ReflectorDish(List<string> lines) => Lines = lines;
+        public ReflectorDishArrangement(List<string> lines) => Lines = lines;
 
-        public List<string> Lines { get; }
+        public List<string> Lines { get; set; }
 
         public int Rows => Lines.Count;
         public int Columns => Lines[0].Length;
 
+    }
+    
+    public enum Direction { North, East, South, West }
+
+    public void TipDish(ReflectorDishArrangement dish, Direction tipDirection)
+    {
+        switch (tipDirection)
+        {
+            case Direction.North:
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                TipDishWest(dish);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                break;
+            case Direction.East:
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                TipDishWest(dish);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                break;
+            case Direction.South:
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                TipDishWest(dish);
+                dish.Lines = RotateGridCounterClockwise(dish.Lines);
+                break;
+            case Direction.West:
+                TipDishWest(dish);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(tipDirection), tipDirection, null);
+        }
+    }
+    
+    public void TipDishWest(ReflectorDishArrangement dish)
+    {
+        var rollingSectionRegEx = new Regex("[O.]+");
+        var newLines = new List<string>();
+        for (int i = 0; i < dish.Lines.Count; i++)
+        {
+            var currentLine = new string(dish.Lines[i].ToArray());
+            var rollingSections = rollingSectionRegEx.Matches(currentLine);
+            foreach (Match rollingSection in rollingSections)
+            {
+                var rollingRocksInSection = rollingSection.Value.Count(c => c == 'O');
+                var emptySpaceInSection = rollingSection.Value.Length - rollingRocksInSection;
+                var newSection = new string('O', rollingRocksInSection) + new string('.', emptySpaceInSection);
+                currentLine = currentLine.OverwriteAt(rollingSection.Index, newSection);
+            }
+            newLines.Add(currentLine);
+        }
+
+        dish.Lines = newLines;
+    }
+    
+    private List<string> RotateGridCounterClockwise(List<string> lines)
+    {
+        var rotatedLines = new List<string>();
+        for (int i = 0; i < lines[0].Length; i++)
+        {
+            var newLine = new string(lines.Select(l => l[i]).ToArray());
+            rotatedLines.Add(newLine);
+        }
+
+        return rotatedLines;
+    }
+    
+    private long GetLoadAtSide(ReflectorDishArrangement dish, Direction direction)
+    {
+        var lines = new List<string>(dish.Lines);
+        switch (direction)
+        {
+            case Direction.North:
+                lines = RotateGridCounterClockwise(dish.Lines);
+                return GetLoadAtWestSide(lines);
+            case Direction.East:
+                lines = RotateGridCounterClockwise(dish.Lines);
+                lines = RotateGridCounterClockwise(dish.Lines);
+                return GetLoadAtWestSide(lines);
+            case Direction.South:
+                lines = RotateGridCounterClockwise(dish.Lines);
+                lines = RotateGridCounterClockwise(dish.Lines);
+                lines = RotateGridCounterClockwise(dish.Lines);
+                return GetLoadAtWestSide(lines);
+            case Direction.West:
+                return GetLoadAtWestSide(lines);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+        }
+    }
+    
+    private int GetLoadAtWestSide(List<string> lines)
+    {
+        var width = lines[0].Length;
+        var totalLoad = 0;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var rollingRockIndexes = lines[i].AllIndexesOf("O", StringComparison.Ordinal);
+            var lineLoad = rollingRockIndexes.Sum(rollingRockIndex => width - rollingRockIndex);
+            totalLoad += lineLoad;
+        }
+
+        return totalLoad;
     }
 }
 
