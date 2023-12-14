@@ -19,7 +19,7 @@ public static class StringExtensions
     /// <summary>
     /// Split a string into lines, accounting for windows (\r\n) and linux (\n) line endings.
     /// </summary>
-    public static IList<string> ToLines(this string input, bool removeEmptyLines = false)
+    public static List<string> ToLines(this string input, bool removeEmptyLines = false)
     {
         StringSplitOptions splitOptions = StringSplitOptions.None;
         if (removeEmptyLines)
@@ -27,7 +27,7 @@ public static class StringExtensions
             splitOptions = StringSplitOptions.RemoveEmptyEntries;
         }
         
-        return input.Split(new string[] { "\r\n", "\r", "\n" }, splitOptions);
+        return input.Split(new string[] { "\r\n", "\r", "\n" }, splitOptions).ToList();
     }
     
     /// <summary>
