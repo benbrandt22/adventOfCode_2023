@@ -12,10 +12,10 @@ public class DayXPuzzleTemplate : BaseDayModule
     public override int Day => 0;
     public override string Title => "TITLE";
 
-    [Fact(Skip = "Not yet implemented")] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(-1);
+    [Fact(Skip = "Not yet implemented")][ShowDebug] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(-1);
     [Fact(Skip = "Not yet implemented")] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
+    [Fact(Skip = "Not yet implemented")][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
     [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)

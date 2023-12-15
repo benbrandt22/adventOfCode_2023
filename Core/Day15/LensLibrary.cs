@@ -14,10 +14,10 @@ public class LensLibrary : BaseDayModule
 
     [Fact] public void Hash_Sample() => Hash("HASH").Should().Be(52);
     
-    [Fact] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(1320);
+    [Fact][ShowDebug] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(1320);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(145);
+    [Fact][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(145);
     [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)
@@ -162,4 +162,3 @@ public class LensLibrary : BaseDayModule
     }
 
 }
-
