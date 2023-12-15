@@ -27,9 +27,7 @@ public static class CycleFinder
             inputEnumerator.MoveNext();
             var current = inputEnumerator.Current;
 
-            var seenAtIndex = valuesSeen
-                .Select((item, index) => Tuple.Create(item, index))
-                .FirstOrDefault(x => equalityPredicate(x.Item1, current))?.Item2 ?? -1;
+            var seenAtIndex = valuesSeen.FindIndex(x => equalityPredicate(x, current));
             
             if (seenAtIndex > -1)
             {
