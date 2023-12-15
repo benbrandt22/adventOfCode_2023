@@ -40,6 +40,7 @@ public class ParabolicReflectorDish : BaseDayModule
         var seenArrangements = new List<string>();
 
         // Assuming the cycle repeats at some point, find the cycle length
+        // TODO: try to use the CycleFinder to identify the cycle and extrapolate the final arrangement 
         var cycleIndexStart = -1;
         var cycleLength = -1;
         for (int i = 0; i < totalCycles; i++)
