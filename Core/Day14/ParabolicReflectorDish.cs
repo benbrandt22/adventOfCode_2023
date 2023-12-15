@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Core.Shared;
 using Core.Shared.Extensions;
 using Core.Shared.Modules;
 
@@ -37,38 +38,20 @@ public class ParabolicReflectorDish : BaseDayModule
         WriteLine($"Part 1 - Loaded Reflector Dish with {dish.Rows} rows and {dish.Columns} columns");
 
         var totalCycles = 1000000000;
-        var seenArrangements = new List<string>();
-
+        
         // Assuming the cycle repeats at some point, find the cycle length
-        // TODO: try to use the CycleFinder to identify the cycle and extrapolate the final arrangement 
-        var cycleIndexStart = -1;
-        var cycleLength = -1;
-        for (int i = 0; i < totalCycles; i++)
-        {
-            var currentArrangement = dish.Lines.JoinWith("\r\n");
-
-            Debug(new string('-', 20));
-            Debug($"i = {i}");
-            Debug(currentArrangement);
-            
-            var seenAt = seenArrangements.IndexOf(currentArrangement);
-
-            if (seenAt > -1)
+        var sequence = Enumerable.Range(0, totalCycles)
+            .Select(i =>
             {
-                WriteLine($"Current arrangement (i={i}) last seen at i={seenAt}");
-                cycleIndexStart = seenAt;
-                cycleLength = (i - seenAt);
-                break;
-            }
-            
-            seenArrangements.Add(currentArrangement);
-            SpinCycleDish(dish);
-        }
+                SpinCycleDish(dish);
+                return new ReflectorDishArrangement(dish.Lines);
+            });
+
+        var cycleAnalysis = CycleFinder.FindCycle(sequence,
+            (x, y) => x.Lines.SequenceEqual(y.Lines),
+            totalCycles);
         
-        // Find the arrangement at the end of the cycle
-        var indexOfLastArrangement = (totalCycles - cycleIndexStart) % cycleLength;
-        
-        var finalArrangement = new ReflectorDishArrangement(seenArrangements[cycleIndexStart + indexOfLastArrangement].ToLines());
+        var finalArrangement = cycleAnalysis.FindValueAt(totalCycles - 1);
         
         var loadAtNorthSide = GetLoadAtSide(finalArrangement, Direction.North);
         WriteLine($"Load at North Side: {loadAtNorthSide}");
