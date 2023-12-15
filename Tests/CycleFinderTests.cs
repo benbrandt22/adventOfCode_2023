@@ -51,4 +51,21 @@ public class CycleFinderTests(ITestOutputHelper outputHelper)
     {
         public string Name { get; } = name;
     }
+    
+    [Theory]
+    // Extrapolate to indexes past the end of the supplied data
+    [InlineData(new[] { 1, 2, 3, 1, 2, 3 }, 8, 3)]
+    [InlineData(new[] { 99, 100, 1, 2, 1, 2 }, 7, 2)]
+    // Asking for an index within what has already been seen (no extrapolation needed)
+    [InlineData(new[] { 1, 2, 3, 1, 2, 3 }, 4, 2)]
+    [InlineData(new[] { 99, 100, 1, 2, 1, 2 }, 1, 100)]
+    public void FindValueAt_extrapolates_value_as_expected(int[] inputCycle, int targetIndex, int expectedValue)
+    {
+        outputHelper.WriteLine($"[{string.Join(",",inputCycle)}]");
+        outputHelper.WriteLine($"Expecting {expectedValue} at index {targetIndex}");
+        
+        var cycleAnalysis = CycleFinder.FindCycle(inputCycle);
+        var extrapolatedValue = cycleAnalysis.FindValueAt(targetIndex);
+        extrapolatedValue.Should().Be(expectedValue);
+    }
 }

@@ -56,6 +56,13 @@ public static class CycleFinder
             ValuesSeen = valuesSeen;
         }
         
-        // TODO: add method for extrapolating the value at a given index (see Day 14)
+        public T FindValueAt(long targetIndex)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(targetIndex, nameof(targetIndex));
+            var indexWithinCycle = (targetIndex - CycleStartIndex) % CycleLength;
+            var indexWithinSeenValues = CycleStartIndex + (int)indexWithinCycle;
+            var valueAtTargetIndex = ValuesSeen[indexWithinSeenValues];
+            return valueAtTargetIndex;
+        }
     }
 }
