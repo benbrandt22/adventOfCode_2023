@@ -29,6 +29,23 @@ public static class StringExtensions
         
         return input.Split(new string[] { "\r\n", "\r", "\n" }, splitOptions).ToList();
     }
+
+    /// <summary>
+    /// Converts a string to a 2D char array, where each line is a row and each character is a column.
+    /// </summary>
+    public static char[,] ToGrid(this string input)
+    {
+        var lines = input.ToLines();
+        var grid = new char[lines.Count, lines[0].Length];
+        for (var row = 0; row < lines.Count; row++)
+        {
+            for (var column = 0; column < lines[0].Length; column++)
+            {
+                grid[row, column] = lines[row][column];
+            }
+        }
+        return grid;
+    }
     
     /// <summary>
     /// Finds all substrings in a string, returning the index of each match.
@@ -90,5 +107,11 @@ public static class StringExtensions
         var before = input.Substring(0, index);
         var after = input.Substring(index + newSubstring.Length);
         return before + newSubstring + after;
+    }
+    
+    public static string Indent(this string input, int spaces = 2)
+    {
+        var indent = new string(' ', spaces);
+        return indent + input.Replace("\n", $"\n{indent}");
     }
 }
