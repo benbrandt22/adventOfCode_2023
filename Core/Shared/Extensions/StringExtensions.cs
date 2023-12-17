@@ -48,6 +48,23 @@ public static class StringExtensions
     }
     
     /// <summary>
+    /// Converts a string to a 2D array of integers, where each line is a row and each character is a column.
+    /// </summary>
+    public static int[,] ToIntegerGrid(this string input)
+    {
+        var lines = input.ToLines();
+        var grid = new int[lines.Count, lines[0].Length];
+        for (var row = 0; row < lines.Count; row++)
+        {
+            for (var column = 0; column < lines[0].Length; column++)
+            {
+                grid[row, column] = int.Parse(lines[row][column].ToString());
+            }
+        }
+        return grid;
+    }
+    
+    /// <summary>
     /// Finds all substrings in a string, returning the index of each match.
     /// </summary>
     public static IEnumerable<int> AllIndexesOf(this string source, string value, StringComparison comparisonType) {
