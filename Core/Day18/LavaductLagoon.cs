@@ -15,27 +15,25 @@ public class LavaductLagoon : BaseDayModule
     [Fact][ShowDebug] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(62);
     [Fact][ShowDebug] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(952408144115);
+    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)
     {
-        var steps = ParseData(data);
+        var steps = ParseDataPart1(data);
         WriteLine($"Part 1 - Loaded Dig Plan with {steps.Count} steps");
-
         var area = GetAreaOfDigPlan(steps);
-        
         WriteLine($"Total cubic meters dug: {area}");
         return (long)area;
     }
     
     public long ExecutePart2(string data)
     {
-        WriteLine($"Part 2 - Loaded Data");
-
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        var steps = ParseDataPart2(data);
+        WriteLine($"Part 2 - Loaded Dig Plan with {steps.Count} steps");
+        var area = GetAreaOfDigPlan(steps);
+        WriteLine($"Total cubic meters dug: {area}");
+        return (long)area;
     }
 
     private double GetAreaOfDigPlan(List<DigStep> steps)
@@ -47,18 +45,16 @@ public class LavaductLagoon : BaseDayModule
             borderCoordinates.Add(location);
             location = location.Move(step.Direction, step.Distance);
         }
-
         var totalArea = PolygonAreaShoelaceFormula_OneUnitBorder(borderCoordinates);
-        
         return totalArea;
     }
     
-    public record DigStep(Direction Direction, int Distance, Color Color);
-    public record Direction(int Dx, int Dy);
+    public record DigStep(Direction Direction, long Distance);
+    public record Direction(long Dx, long Dy);
 
-    public record Coordinate(int X, int Y)
+    public record Coordinate(long X, long Y)
     {
-        public Coordinate Move(Direction direction, int distance = 1) =>
+        public Coordinate Move(Direction direction, long distance = 1) =>
             new(X + (direction.Dx * distance), Y + (direction.Dy * distance));
     }
     
@@ -67,9 +63,9 @@ public class LavaductLagoon : BaseDayModule
     public static readonly Direction Left = new(-1, 0);
     public static readonly Direction Right = new(1, 0);
 
-    public List<DigStep> ParseData(string data)
+    public List<DigStep> ParseDataPart1(string data)
     {
-        var lineRegEx = new Regex(@"(?<direction>[UDLR])\W(?<distance>\d+)\W\((?<hexcolor>\#[a-f0-9]+)\)");
+        var lineRegEx = new Regex(@"(?<direction>[UDLR])\W(?<distance>\d+)\W\(\#(?<hex>[a-f0-9]+)\)");
 
         var steps = data.ToLines(true)
             .Select(line => lineRegEx.Match(line))
@@ -82,28 +78,58 @@ public class LavaductLagoon : BaseDayModule
                 };
 
                 var distance = int.Parse(m.Groups["distance"].Value);
-                var color = ColorTranslator.FromHtml(m.Groups["hexcolor"].Value);
 
-                return new DigStep(direction, distance, color);
+                return new DigStep(direction, distance);
+            })
+            .ToList();
+
+        return steps;
+    }
+    
+    public List<DigStep> ParseDataPart2(string data)
+    {
+        var lineRegEx = new Regex(@"(?<direction>[UDLR])\W(?<distance>\d+)\W\(\#(?<hex>[a-f0-9]{6})\)");
+
+        var steps = data.ToLines(true)
+            .Select(line => lineRegEx.Match(line))
+            .Select(m =>
+            {
+                // The last hexadecimal digit encodes the direction to dig: 0 means R, 1 means D, 2 means L, and 3 means U
+                var hexValue = m.Groups["hex"].Value;
+                
+                var direction = hexValue.Last() switch
+                {
+                    '3' => Up, '1' => Down, '2' => Left, '0' => Right,
+                    _ => throw new Exception("Invalid direction")
+                };
+
+                var distance = int.Parse(hexValue.Substring(0,5), System.Globalization.NumberStyles.HexNumber);
+
+                return new DigStep(direction, distance);
             })
             .ToList();
 
         return steps;
     }
 
+    /// <summary>
+    /// Calculates the area of a polygon from coordinates of each vertex using the shoelace formula
+    /// </summary>
+    /// <remarks>
+    /// https://en.wikipedia.org/wiki/Shoelace_formula
+    /// </remarks>
     public double PolygonAreaShoelaceFormula(List<Coordinate> coordinates)
     {
         var n = coordinates.Count;
-        double area = 0.0;
+        double determinants = 0.0;
         for (int i = 0; i < n; i++)
         {
             var j = (i + 1) % n;
-            area += coordinates[i].X * coordinates[j].Y;
-            area -= coordinates[i].Y * coordinates[j].X;
+            determinants += coordinates[i].X * coordinates[j].Y;
+            determinants -= coordinates[i].Y * coordinates[j].X;
         }
-
-        area /= 2;
-        return Math.Abs(area);
+        var area = Math.Abs(determinants / 2);
+        return area;
     }
     
     /// <summary>
@@ -122,12 +148,12 @@ public class LavaductLagoon : BaseDayModule
         var perimeter = 0.0;
         for (int i = 0; i < coordinates.Count; i++)
         {
-            var j = (i + 1) % coordinates.Count;
-            perimeter += Math.Sqrt(Math.Pow(coordinates[j].X - coordinates[i].X, 2) + Math.Pow(coordinates[j].Y - coordinates[i].Y, 2));
+            var j = (i + 1) % coordinates.Count; // get next coordinate index or wrap around to first coordinate
+            var lineSegmentLength = Math.Sqrt(Math.Pow(coordinates[j].X - coordinates[i].X, 2) +
+                                              Math.Pow(coordinates[j].Y - coordinates[i].Y, 2));
+            perimeter += lineSegmentLength;
         }
-
         return perimeter;
     }
     
-
 }
