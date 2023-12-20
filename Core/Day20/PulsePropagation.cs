@@ -16,7 +16,7 @@ public class PulsePropagation : BaseDayModule
     [Fact][ShowDebug] public void Part1_Sample2() => ExecutePart1(GetData("sample2")).Should().Be(11687500);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact(Skip = "Not implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)
     {
@@ -42,11 +42,13 @@ public class PulsePropagation : BaseDayModule
     
     public long ExecutePart2(string data)
     {
-        WriteLine($"Part 2 - Loaded Data");
+        var commSystem = ParseCommSystem(data);
+        WriteLine($"Part 2 - Loaded Comm System with {commSystem.Modules.Count} modules");
 
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        throw new NotImplementedException();
+        
+        // TODO: find the cycles of the modules feeding into the last module before rx
+        // TODO: use those cycles to get an LCM to figure out the solution
     }
 
     public CommSystem ParseCommSystem(string data)
@@ -115,7 +117,7 @@ public class PulsePropagation : BaseDayModule
                     foreach (var moduleNextModuleName in current.Module.NextModuleNames)
                     {
                         signalCounts[output.Value]++;
-                        System.Diagnostics.Debug.WriteLine($"{current.Module.Name} -{output.Value}-> {moduleNextModuleName}");
+                        //System.Diagnostics.Debug.WriteLine($"{current.Module.Name} -{output.Value}-> {moduleNextModuleName}");
                         _toProcess.Enqueue((current.Module.Name, output.Value, Modules[moduleNextModuleName]));
                     }
                 }
