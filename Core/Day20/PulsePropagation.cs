@@ -16,7 +16,8 @@ public class PulsePropagation : BaseDayModule
     [Fact][ShowDebug] public void Part1_Sample2() => ExecutePart1(GetData("sample2")).Should().Be(11687500);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact(Skip = "In theory this could work, but it's still too brute-forcy... gotta rethink and find the pattern/shortcut")]
+    public void Part2() => ExecutePart2(GetData(InputType.Input));
 
     public long ExecutePart1(string data)
     {
@@ -27,7 +28,7 @@ public class PulsePropagation : BaseDayModule
         long highCounts = 0;
         for (int i = 0; i < 1000; i++)
         {
-            var thisPressSignalCounts = commSystem.GetSignalCountsForButtonPress();
+            var thisPressSignalCounts = commSystem.PressButton();
             lowCounts += thisPressSignalCounts[Signal.Low];
             highCounts += thisPressSignalCounts[Signal.High];
         }
@@ -45,10 +46,42 @@ public class PulsePropagation : BaseDayModule
         var commSystem = ParseCommSystem(data);
         WriteLine($"Part 2 - Loaded Comm System with {commSystem.Modules.Count} modules");
 
-        throw new NotImplementedException();
+        var lastConjunctionModuleBeforeRx = commSystem.Modules.Values
+            .OfType<ConjunctionModule>()
+            .Single(module => module.NextModuleNames.Contains("rx"));
         
-        // TODO: find the cycles of the modules feeding into the last module before rx
-        // TODO: use those cycles to get an LCM to figure out the solution
+        var inputsToLastConjunctionBeforeRx = commSystem.Modules.Values
+            .Where(module => module.NextModuleNames.Contains(lastConjunctionModuleBeforeRx.Name))
+            .Cast<ConjunctionModule>()
+            .ToList();
+
+        var buttonPressCountsToFirstHighSignalOutput = inputsToLastConjunctionBeforeRx
+            .ToDictionary(m => m.Name, m => 0L);
+
+        bool solved = false;
+        while (solved == false)
+        {
+            commSystem.PressButton();
+            inputsToLastConjunctionBeforeRx.ForEach(cm =>
+            {
+                if (cm.LastOutput == Signal.High && buttonPressCountsToFirstHighSignalOutput[cm.Name] == 0)
+                {
+                    buttonPressCountsToFirstHighSignalOutput[cm.Name] = commSystem.TotalButtonPresses;
+                    // did we get cycle lengths for all?
+                    if (buttonPressCountsToFirstHighSignalOutput.Values.All(v => v > 0))
+                    {
+                        solved = true;
+                    }
+                }
+            });
+        }
+
+        WriteLine("Button presses for the following modules to produce a high signal:");
+        buttonPressCountsToFirstHighSignalOutput.ToList().ForEach(kvp => WriteLine($" {kvp.Key}: {kvp.Value}"));
+
+        var solution = LeastCommonMultiple(buttonPressCountsToFirstHighSignalOutput.Values);
+        WriteLine($"Minimum button presses to produce a low signal at RX: {solution}");
+        return solution;
     }
 
     public CommSystem ParseCommSystem(string data)
@@ -99,7 +132,13 @@ public class PulsePropagation : BaseDayModule
     {
         public Dictionary<string, IModule> Modules { get; set; } = new();
         
-        public Dictionary<Signal, int> GetSignalCountsForButtonPress()
+        public int TotalButtonPresses { get; private set; } = 0;
+        
+        /// <summary>
+        /// Pressing the button sends a low pulse to the broadcaster module. After the signals propagate through
+        /// the system, this returns the low and high signal counts that were sent in the process.
+        /// </summary>
+        public Dictionary<Signal, int> PressButton()
         {
             Queue<(string InputSourceName, Signal Input, IModule Module)> _toProcess = new();
             
@@ -122,6 +161,8 @@ public class PulsePropagation : BaseDayModule
                     }
                 }
             }
+            
+            TotalButtonPresses++;
 
             return signalCounts;
         }
@@ -130,6 +171,27 @@ public class PulsePropagation : BaseDayModule
     public enum Signal { Low, High }
     
     public enum ModuleType { Button, Broadcaster, FlipFlop, Conjunction }
+    
+    /// <summary>
+    /// Least Common Multiple
+    /// From: https://www.w3resource.com/csharp-exercises/math/csharp-math-exercise-20.php
+    /// </summary>
+    public static long LeastCommonMultiple(IEnumerable<long> numbers)
+    {
+        return numbers.Aggregate((S, val) => S * val / gcd(S, val));
+    }
+    
+    static long gcd(long n1, long n2)
+    {
+        if (n2 == 0)
+        {
+            return n1;
+        }
+        else
+        {
+            return gcd(n2, n1 % n2);
+        }
+    }
     
     public interface IModule
     {
@@ -173,24 +235,29 @@ public class PulsePropagation : BaseDayModule
         public string Name { get; }
         public List<string> NextModuleNames { get; }
         
-        private Dictionary<string,Signal> _recentPulses;
+        private Dictionary<string,Signal> _recentInputPulses;
 
         public ConjunctionModule(string name, List<string> inputModuleNames, List<string> nextModuleNames)
         {
             Name = name;
             NextModuleNames = nextModuleNames;
             // initially default to remembering a low pulse for each input
-            _recentPulses = inputModuleNames.ToDictionary(inputModuleName => inputModuleName, inputModuleName => Signal.Low);
+            _recentInputPulses = inputModuleNames.ToDictionary(inputModuleName => inputModuleName, inputModuleName => Signal.Low);
+            LastOutput = null;
         }
         
         public Signal? GetOutput(Signal inputSignal, string inputSourceName)
         {
             // When a pulse is received, the conjunction module first updates its memory for that input.
-            _recentPulses[inputSourceName] = inputSignal;
+            _recentInputPulses[inputSourceName] = inputSignal;
             // Then, if it remembers high pulses for all inputs, it sends a low pulse; otherwise, it sends a high pulse.
-            var allInputsAreHigh = _recentPulses.Values.All(signal => signal == Signal.High);
-            return allInputsAreHigh ? Signal.Low : Signal.High;
+            var allInputsAreHigh = _recentInputPulses.Values.All(signal => signal == Signal.High);
+            var output = allInputsAreHigh ? Signal.Low : Signal.High;
+            LastOutput = output;
+            return output;
         }
+        
+        public Signal? LastOutput { get; private set; }
     }
     
     public class EndModule(string name) : IModule
