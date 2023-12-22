@@ -13,8 +13,8 @@ public class SandSlabs : BaseDayModule
     [Fact][ShowDebug] public void Part1_Sample() => ExecutePart1(GetData(InputType.Sample)).Should().Be(5);
     [Fact] public void Part1() => ExecutePart1(GetData(InputType.Input));
 
-    [Fact(Skip = "Not yet implemented")][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(-1);
-    [Fact(Skip = "Not yet implemented")] public void Part2() => ExecutePart2(GetData(InputType.Input));
+    [Fact][ShowDebug] public void Part2_Sample() => ExecutePart2(GetData(InputType.Sample)).Should().Be(7);
+    [Fact] public void Part2() => ExecutePart2(GetData(InputType.Input));
     
     [Theory]
     [ClassData(typeof(XyFootprintOverlapsTestData))]
@@ -33,7 +33,7 @@ public class SandSlabs : BaseDayModule
         
         var settledBricks = SettleBricks(bricks);
 
-        var removableBricks = CountRemovableBricks(settledBricks);
+        var removableBricks = CountRemovableBricks(settledBricks.settledBricks);
         
         WriteLine($"Removable Bricks: {removableBricks}");
         return removableBricks;
@@ -41,33 +41,50 @@ public class SandSlabs : BaseDayModule
 
     public long ExecutePart2(string data)
     {
-        WriteLine($"Part 2 - Loaded Data");
-
-        var solution = 0;
-        WriteLine($"Solution: {solution}");
-        return solution;
+        var allBricksSettled = SettleBricks(ParseBricks(data)).settledBricks;
+        WriteLine($"Part 2 - Loaded {allBricksSettled.Count} bricks");
+        
+        var allBrickIds = allBricksSettled.Select(b => b.Id).ToList();
+        var totalFallingBricks = 0;
+        foreach (var brickIdToRemove in allBrickIds)
+        {
+            // remove one brick and re-settle everything to see how many fall.
+            // could probably be more efficient, but this works to solve the puzzle.
+            var bricksAfterRemoval = allBricksSettled.Where(b => b.Id != brickIdToRemove).ToList();
+            // see how many bricks fall now with that one removed
+            var bricksThatFall = SettleBricks(bricksAfterRemoval).fallenBricks;
+            totalFallingBricks += bricksThatFall;
+        }
+        
+        WriteLine($"Total Falling Bricks: {totalFallingBricks}");
+        return totalFallingBricks;
     }
     
-    private List<Brick> SettleBricks(List<Brick> bricks)
+    private (List<Brick> settledBricks, int fallenBricks) SettleBricks(List<Brick> bricks)
     {
         var unsettledBricks = new Queue<Brick>(bricks.OrderBy(b => b.MinZ).ThenBy(b => b.MinX).ThenBy(b => b.MinY));
         var settledBricks = new List<Brick>();
+        int fallenBricks = 0;
         
         while (unsettledBricks.Any())
         {
-            var currentBrick = unsettledBricks.Dequeue();
+            var currentBrick = unsettledBricks.Dequeue().Copy(); // new brick instance so we don't modify the input bricks
             if (currentBrick.MinZ > 1) // (bricks already sitting at 1 are on the ground)
             {
                 var settledBricksUnderThisBrick = settledBricks.Where(b => b.Footprint.Overlaps(currentBrick.Footprint)).ToList();
                 var highestValueBelow = settledBricksUnderThisBrick.Any() ? settledBricksUnderThisBrick.Max(b => b.MaxZ) : 0;
                 var distanceToFall = currentBrick.MinZ - highestValueBelow - 1;
                 currentBrick.Move(0, 0, -distanceToFall);
+                if (distanceToFall > 0)
+                {
+                    fallenBricks++;
+                }
             }
             
             settledBricks.Add(currentBrick);
         }
 
-        return settledBricks;
+        return (settledBricks, fallenBricks);
     }
     
     private int CountRemovableBricks(List<Brick> settledBricks)
@@ -159,6 +176,11 @@ public class SandSlabs : BaseDayModule
         public int MaxZ => Math.Max(corner1.Z, corner2.Z);
         public XyFootprint Footprint => new(MinX, MinY, MaxX, MaxY);
 
+        /// <summary>
+        /// Creates a new instance of brick with the same dimensions and ID as this one.
+        /// </summary>
+        public Brick Copy() => new(corner1, corner2, Id);
+        
         public void Move(int dX, int dY, int dZ)
         {
             corner1 = new XyzCoordinate(X: corner1.X + dX, Y: corner1.Y + dY, Z: corner1.Z + dZ);
