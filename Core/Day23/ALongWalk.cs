@@ -34,12 +34,12 @@ public class ALongWalk : BaseDayModule
         data = data.Replace('^', '.').Replace('v', '.').Replace('<', '.').Replace('>', '.');
         var grid = data.Trim().ToGrid();
         WriteLine($"Part 2 - Loaded (simplified) Hiking Map with {grid.GetLength(0)} rows and {grid.GetLength(1)} columns");
-        var longestPathLength = FindLongestHikingPath(grid);
+        var longestPathLength = FindLongestHikingPath(grid, simplifyGraph: true);
         WriteLine($"Longest Hiking Path: {longestPathLength}");
         return longestPathLength;
     }
 
-    private int FindLongestHikingPath(char[,] grid)
+    private int FindLongestHikingPath(char[,] grid, bool simplifyGraph = false)
     {
         // in the top row of the grid, find the only cell containing a '.' character
         var startCoordinate = FindFirstLocationOfCharacterInRow(grid, 0, '.');
@@ -48,6 +48,11 @@ public class ALongWalk : BaseDayModule
         WriteLine($"End Coordinate: {endCoordinate}");
 
         var graph = BuildGraph(grid);
+        if (simplifyGraph)
+        {
+            // simplify any direct paths to minimize nodes
+            SimplifyUndirectedGraph(graph);
+        }
 
         var hikingPaths = new List<HikingPath>(){new(new List<GridCoordinate>(){startCoordinate}, 0)};
         var solvedPaths = new List<HikingPath>();
@@ -97,8 +102,26 @@ public class ALongWalk : BaseDayModule
         }
         return graph;
     }
-
-    public record HikingGraphNode(GridCoordinate Coordinate, List<HikingGraphNode> NextNodes);
+    
+    public void SimplifyUndirectedGraph(HikingGraph graph)
+    {
+        // Any node with two neighbors can be removed from the graph and replaced with a single edge between the two neighbors
+        while (true)
+        {
+            var nodesToRemove = graph.Where(n => n.Value.Count == 2).Take(1).ToList();
+            if(!nodesToRemove.Any()) break;
+            var coord = nodesToRemove.Single().Key;
+            var neighbors = nodesToRemove.Single().Value;
+            
+            var (neighbor1, distance1) = neighbors.First();
+            var (neighbor2, distance2) = neighbors.Last();
+            graph.Remove(coord);
+            graph[neighbor1].Remove((coord, distance1));
+            graph[neighbor2].Remove((coord, distance2));
+            graph[neighbor1].Add((neighbor2, distance1 + distance2));
+            graph[neighbor2].Add((neighbor1, distance1 + distance2));
+        }
+    }
     
     public List<(GridCoordinate coordinate, int distance)> AvailableNeighbors(char[,] grid, GridCoordinate currentLocation)
     {
