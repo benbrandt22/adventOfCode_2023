@@ -3,7 +3,7 @@ using Core.Shared.Modules;
 
 namespace Core.Day23;
 
-using HikingGraph = Dictionary<ALongWalk.GridCoordinate, HashSet<ALongWalk.GridCoordinate>>;
+using HikingGraph = Dictionary<ALongWalk.GridCoordinate, HashSet<(ALongWalk.GridCoordinate neighbor, int distance)>>;
 
 public class ALongWalk : BaseDayModule
 {
@@ -48,8 +48,8 @@ public class ALongWalk : BaseDayModule
         WriteLine($"End Coordinate: {endCoordinate}");
 
         var graph = BuildGraph(grid);
-        
-        var hikingPaths = new List<HikingPath>() { new() { Path = new() { startCoordinate } } };
+
+        var hikingPaths = new List<HikingPath>(){new(new List<GridCoordinate>(){startCoordinate}, 0)};
         var solvedPaths = new List<HikingPath>();
         
         while (true)
@@ -72,11 +72,11 @@ public class ALongWalk : BaseDayModule
     public List<HikingPath> EvaluateNext(HikingPath path, HikingGraph graph)
     {
         var nextCellOptions = graph[path.LastLocation] // find neighbors from the graph
-            .Where(c => !path.Path.Contains(c)).ToHashSet(); // don't revisit cells we've already been to
-        var possiblePaths = nextCellOptions.Select(coord =>
+            .Where(c => !path.HasVisited(c.neighbor)).ToHashSet(); // don't revisit cells we've already been to
+        var possiblePaths = nextCellOptions.Select(neighbor =>
         {
             var newPath = path.Copy();
-            newPath.Path.Add(coord);
+            newPath.Add(neighbor.neighbor, neighbor.distance);
             return newPath;
         }).ToList();
         return possiblePaths;
@@ -84,7 +84,7 @@ public class ALongWalk : BaseDayModule
 
     public HikingGraph BuildGraph(char[,] grid)
     {
-        var graph = new Dictionary<GridCoordinate, HashSet<GridCoordinate>>();
+        var graph = new Dictionary<GridCoordinate, HashSet<(GridCoordinate neighbor, int distance)>>();
         for (var row = 0; row < grid.GetLength(0); row++)
         {
             for (var col = 0; col < grid.GetLength(1); col++)
@@ -100,9 +100,9 @@ public class ALongWalk : BaseDayModule
 
     public record HikingGraphNode(GridCoordinate Coordinate, List<HikingGraphNode> NextNodes);
     
-    public List<GridCoordinate> AvailableNeighbors(char[,] grid, GridCoordinate currentLocation)
+    public List<(GridCoordinate coordinate, int distance)> AvailableNeighbors(char[,] grid, GridCoordinate currentLocation)
     {
-        var possibleMoves = new List<GridCoordinate>();
+        var possibleMoves = new List<(GridCoordinate coordinate, int distance)>();
         
         bool TryMove(GridCoordinate start, Direction direction, char allowedSlope, out GridCoordinate coord)
         {
@@ -119,25 +119,40 @@ public class ALongWalk : BaseDayModule
             coord = new GridCoordinate(int.MinValue, int.MinValue);
             return false;
         }
-        
-        if (TryMove(currentLocation, Direction.Up, '^', out var up)) possibleMoves.Add(up);
-        if (TryMove(currentLocation, Direction.Down, 'v', out var down)) possibleMoves.Add(down);
-        if (TryMove(currentLocation, Direction.Left, '<', out var left)) possibleMoves.Add(left);
-        if (TryMove(currentLocation, Direction.Right, '>', out var right)) possibleMoves.Add(right);
+
+        if (TryMove(currentLocation, Direction.Up, '^', out var up)) possibleMoves.Add((up, 1));
+        if (TryMove(currentLocation, Direction.Down, 'v', out var down)) possibleMoves.Add((down, 1));
+        if (TryMove(currentLocation, Direction.Left, '<', out var left)) possibleMoves.Add((left, 1));
+        if (TryMove(currentLocation, Direction.Right, '>', out var right)) possibleMoves.Add((right, 1));
 
         return possibleMoves;
     }
 
     public class HikingPath
     {
-        public List<GridCoordinate> Path { get; set; } = new();
-        public int TotalSteps => (Path.Count - 1); // (Starting location doesn't count as a step)
+        public HikingPath(List<GridCoordinate> path, int totalSteps = 0)
+        {
+            Path = path;
+            TotalSteps = totalSteps;
+        }
+
+        public List<GridCoordinate> Path { get; private set; }
+        public int TotalSteps { get; private set; }
         public GridCoordinate LastLocation => Path.Last();
         public HikingPath Copy()
         {
-            // sanity check
-            if (Path.Count > 19881) throw new Exception("Path is too long"); // 141*141 = 19881, if we get this length, something is wrong
-            return new HikingPath { Path = new List<GridCoordinate>(Path) };
+            return new HikingPath(new List<GridCoordinate>(Path), TotalSteps);
+        }
+
+        public bool HasVisited(GridCoordinate neighbor)
+        {
+            return Path.Contains(neighbor);
+        }
+
+        public void Add(GridCoordinate location, int distance)
+        {
+            Path.Add(location);
+            TotalSteps += distance;
         }
     }
     
