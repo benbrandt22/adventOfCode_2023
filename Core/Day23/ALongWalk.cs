@@ -3,8 +3,11 @@ using Core.Shared.Modules;
 
 namespace Core.Day23;
 
+using HikingGraph = Dictionary<ALongWalk.GridCoordinate, HashSet<ALongWalk.GridCoordinate>>;
+
 public class ALongWalk : BaseDayModule
 {
+    
     public ALongWalk(ITestOutputHelper outputHelper) : base(outputHelper) { }
     
     public override int Day => 23;
@@ -44,6 +47,8 @@ public class ALongWalk : BaseDayModule
         var endCoordinate = FindFirstLocationOfCharacterInRow(grid, (grid.GetLength(0) - 1), '.');
         WriteLine($"End Coordinate: {endCoordinate}");
 
+        var graph = BuildGraph(grid);
+        
         var hikingPaths = new List<HikingPath>() { new() { Path = new() { startCoordinate } } };
         var solvedPaths = new List<HikingPath>();
         
@@ -53,7 +58,7 @@ public class ALongWalk : BaseDayModule
             
             hikingPaths = hikingPaths
                 .Where(hp => hp.LastLocation != endCoordinate)
-                .SelectMany(path => EvaluateNext(path, grid)).ToList();
+                .SelectMany(path => EvaluateNext(path, graph)).ToList();
             
             if (hikingPaths.Count == 0) break;
         }
@@ -64,9 +69,10 @@ public class ALongWalk : BaseDayModule
         return solvedPaths.Max(x => x.TotalSteps);
     }
 
-    public List<HikingPath> EvaluateNext(HikingPath path, char[,] grid)
+    public List<HikingPath> EvaluateNext(HikingPath path, HikingGraph graph)
     {
-        var nextCellOptions = NextPossibleMoves(grid, path.LastLocation, path.Path);
+        var nextCellOptions = graph[path.LastLocation] // find neighbors from the graph
+            .Where(c => !path.Path.Contains(c)).ToHashSet(); // don't revisit cells we've already been to
         var possiblePaths = nextCellOptions.Select(coord =>
         {
             var newPath = path.Copy();
@@ -75,15 +81,33 @@ public class ALongWalk : BaseDayModule
         }).ToList();
         return possiblePaths;
     }
+
+    public HikingGraph BuildGraph(char[,] grid)
+    {
+        var graph = new Dictionary<GridCoordinate, HashSet<GridCoordinate>>();
+        for (var row = 0; row < grid.GetLength(0); row++)
+        {
+            for (var col = 0; col < grid.GetLength(1); col++)
+            {
+                var coord = new GridCoordinate(row, col);
+                if (grid[row, col] == '#') continue; // ignore walls
+                var neighbors = AvailableNeighbors(grid, coord);
+                graph.Add(coord, neighbors.ToHashSet());
+            }
+        }
+        return graph;
+    }
+
+    public record HikingGraphNode(GridCoordinate Coordinate, List<HikingGraphNode> NextNodes);
     
-    public List<GridCoordinate> NextPossibleMoves(char[,] grid, GridCoordinate currentLocation, List<GridCoordinate> previousVisited)
+    public List<GridCoordinate> AvailableNeighbors(char[,] grid, GridCoordinate currentLocation)
     {
         var possibleMoves = new List<GridCoordinate>();
         
         bool TryMove(GridCoordinate start, Direction direction, char allowedSlope, out GridCoordinate coord)
         {
             var nextLocation = start.Move(direction);
-            if (nextLocation.IsInBounds(grid) && !previousVisited.Contains(nextLocation))
+            if (nextLocation.IsInBounds(grid))
             {
                 var nextCellValue = grid[nextLocation.Row, nextLocation.Column];
                 if (nextCellValue == '.' || nextCellValue == allowedSlope)
